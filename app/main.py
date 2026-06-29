@@ -1,11 +1,7 @@
-from database import Database
+from pms_client import PMSClient
 
-db = Database()
+pms = PMSClient()
 
-db.delete_reservation("12345")
+print(pms.login())
 
-row = db.get_reservation_by_hostify_id("12345")
-
-print(row)  # This should print None if the reservation was successfully deleted
-
-db.close()
+pms.close()
