@@ -2,6 +2,7 @@ from pms_client import PMSClient
 
 pms = PMSClient()
 
-print(pms.login())
+pms.login()
+print(pms.test_session())
 
 pms.close()
