@@ -1,11 +1,26 @@
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from scheduler import start_scheduler, stop_scheduler
+from sync import SyncService
+from reservation_service import ReservationService
+from database import Database
 from pms_client import PMSClient
 
+db = Database()
 pms = PMSClient()
+sync_service = SyncService(db, pms)
+service = ReservationService(db, sync_service)
 
-pms.login()
+def job():
+    service.process_status_changes()
 
-data = pms.get_common_pins()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
+    start_scheduler(job)
+    yield
 
-print(data)
+    # shutdown
+    stop_scheduler()
 
-pms.close()
+app = FastAPI(lifespan=lifespan)
