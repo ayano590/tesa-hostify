@@ -48,8 +48,14 @@ class Database:
             data["departure"],
             data["status"]
         ))
-        
+
         self.conn.commit()
+
+    def get_reservation_by_hostify_id(self, hostify_id):
+        self.cursor.execute('''
+            SELECT * FROM reservations WHERE hostify_id = ?
+        ''', (hostify_id,))
+        return self.cursor.fetchone()
 
     def close(self):
         self.conn.close()
