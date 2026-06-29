@@ -56,6 +56,19 @@ class Database:
             SELECT * FROM reservations WHERE hostify_id = ?
         ''', (hostify_id,))
         return self.cursor.fetchone()
+    
+    def update_reservation_fields(self, hostify_id, fields):
+        if not fields:
+            return  # No fields to update
+        
+        set_clause = ', '.join([f"{key} = ?" for key in fields.keys()])
+        values = list(fields.values())
+        values.append(hostify_id)
+
+        self.cursor.execute(f'''
+            UPDATE reservations SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE hostify_id = ?
+        ''', values)
+        self.conn.commit()
 
     def close(self):
         self.conn.close()
