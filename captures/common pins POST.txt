@@ -1,0 +1,336 @@
+Request URL
+https://localhost:8181/TesaHotelPlatform/REST/systemConfig/commonPins
+Request Method
+POST
+Status Code
+200 OK
+Remote Address
+[::1]:8181
+Referrer Policy
+strict-origin-when-cross-origin
+access-control-allow-credentials
+true
+access-control-allow-headers
+Origin, Accept, x-auth-token, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers
+access-control-allow-methods
+POST, GET, HEAD, OPTIONS, PUT, DELETE
+access-control-allow-origin
+https://localhost:4200
+cache-control
+no-cache, no-store, must-revalidate
+content-length
+5211
+content-type
+application/json;charset=UTF-8
+expires
+Thu, 01 Jan 1970 00:00:00 GMT
+pragma
+no-cache
+:authority
+localhost:8181
+:method
+POST
+:path
+/TesaHotelPlatform/REST/systemConfig/commonPins
+:scheme
+https
+accept
+application/json, text/plain, */*
+accept-encoding
+gzip, deflate, br, zstd
+accept-language
+de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+cache-control
+no-cache
+content-length
+252
+content-type
+application/json; charset=UTF-8
+cookie
+JSESSIONID=87d2352158edbbf42a7911a4cd3d
+origin
+https://localhost:8181
+pragma
+no-cache
+priority
+u=1, i
+referer
+https://localhost:8181/ServerPlatform/modern/de/
+sec-ch-ua
+"Microsoft Edge";v="149", "Chromium";v="149", "Not)A;Brand";v="24"
+sec-ch-ua-mobile
+?0
+sec-ch-ua-platform
+"Windows"
+sec-fetch-dest
+empty
+sec-fetch-mode
+cors
+sec-fetch-site
+same-origin
+user-agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0
+
+{"pin1":"1151","pin2":"7086","pin3":"2021","pin4":"3527","pin5":"2882","pin6":"","pin7":"","pinName1":"Artur","pinName2":"Zimmer 1","pinName3":"Zimmer 3","pinName4":"Zimmer 4","pinName5":"Zimmer 5","pinName6":"Generic Pin 6","pinName7":"Generic Pin 7"}
+
+{
+    "type": "RESULT_OK",
+    "commonPinsInfo": {
+        "pin1": "1151",
+        "pin10": "",
+        "pin100": "",
+        "pin101": "",
+        "pin102": "",
+        "pin103": "",
+        "pin104": "",
+        "pin105": "",
+        "pin106": "",
+        "pin107": "",
+        "pin108": "",
+        "pin109": "",
+        "pin11": "",
+        "pin110": "",
+        "pin111": "",
+        "pin112": "",
+        "pin113": "",
+        "pin114": "",
+        "pin115": "",
+        "pin116": "",
+        "pin117": "",
+        "pin118": "",
+        "pin119": "",
+        "pin12": "",
+        "pin120": "",
+        "pin121": "",
+        "pin122": "",
+        "pin123": "",
+        "pin124": "",
+        "pin125": "",
+        "pin126": "",
+        "pin127": "",
+        "pin128": "",
+        "pin13": "",
+        "pin14": "",
+        "pin15": "",
+        "pin16": "",
+        "pin17": "",
+        "pin18": "",
+        "pin19": "",
+        "pin2": "7086",
+        "pin20": "",
+        "pin21": "",
+        "pin22": "",
+        "pin23": "",
+        "pin24": "",
+        "pin25": "",
+        "pin26": "",
+        "pin27": "",
+        "pin28": "",
+        "pin29": "",
+        "pin3": "2021",
+        "pin30": "",
+        "pin31": "",
+        "pin32": "",
+        "pin33": "",
+        "pin34": "",
+        "pin35": "",
+        "pin36": "",
+        "pin37": "",
+        "pin38": "",
+        "pin39": "",
+        "pin4": "3527",
+        "pin40": "",
+        "pin41": "",
+        "pin42": "",
+        "pin43": "",
+        "pin44": "",
+        "pin45": "",
+        "pin46": "",
+        "pin47": "",
+        "pin48": "",
+        "pin49": "",
+        "pin5": "2882",
+        "pin50": "",
+        "pin51": "",
+        "pin52": "",
+        "pin53": "",
+        "pin54": "",
+        "pin55": "",
+        "pin56": "",
+        "pin57": "",
+        "pin58": "",
+        "pin59": "",
+        "pin6": "",
+        "pin60": "",
+        "pin61": "",
+        "pin62": "",
+        "pin63": "",
+        "pin64": "",
+        "pin65": "",
+        "pin66": "",
+        "pin67": "",
+        "pin68": "",
+        "pin69": "",
+        "pin7": "",
+        "pin70": "",
+        "pin71": "",
+        "pin72": "",
+        "pin73": "",
+        "pin74": "",
+        "pin75": "",
+        "pin76": "",
+        "pin77": "",
+        "pin78": "",
+        "pin79": "",
+        "pin8": "",
+        "pin80": "",
+        "pin81": "",
+        "pin82": "",
+        "pin83": "",
+        "pin84": "",
+        "pin85": "",
+        "pin86": "",
+        "pin87": "",
+        "pin88": "",
+        "pin89": "",
+        "pin9": "",
+        "pin90": "",
+        "pin91": "",
+        "pin92": "",
+        "pin93": "",
+        "pin94": "",
+        "pin95": "",
+        "pin96": "",
+        "pin97": "",
+        "pin98": "",
+        "pin99": "",
+        "pinName1": "Artur",
+        "pinName10": "Generic Pin 10",
+        "pinName100": "Generic Pin 100",
+        "pinName101": "Generic Pin 101",
+        "pinName102": "Generic Pin 102",
+        "pinName103": "Generic Pin 103",
+        "pinName104": "Generic Pin 104",
+        "pinName105": "Generic Pin 105",
+        "pinName106": "Generic Pin 106",
+        "pinName107": "Generic Pin 107",
+        "pinName108": "Generic Pin 108",
+        "pinName109": "Generic Pin 109",
+        "pinName11": "Generic Pin 11",
+        "pinName110": "Generic Pin 110",
+        "pinName111": "Generic Pin 111",
+        "pinName112": "Generic Pin 112",
+        "pinName113": "Generic Pin 113",
+        "pinName114": "Generic Pin 114",
+        "pinName115": "Generic Pin 115",
+        "pinName116": "Generic Pin 116",
+        "pinName117": "Generic Pin 117",
+        "pinName118": "Generic Pin 118",
+        "pinName119": "Generic Pin 119",
+        "pinName12": "Generic Pin 12",
+        "pinName120": "Generic Pin 120",
+        "pinName121": "Generic Pin 121",
+        "pinName122": "Generic Pin 122",
+        "pinName123": "Generic Pin 123",
+        "pinName124": "Generic Pin 124",
+        "pinName125": "Generic Pin 125",
+        "pinName126": "Generic Pin 126",
+        "pinName127": "Generic Pin 127",
+        "pinName128": "Generic Pin 128",
+        "pinName13": "Generic Pin 13",
+        "pinName14": "Generic Pin 14",
+        "pinName15": "Generic Pin 15",
+        "pinName16": "Generic Pin 16",
+        "pinName17": "Generic Pin 17",
+        "pinName18": "Generic Pin 18",
+        "pinName19": "Generic Pin 19",
+        "pinName2": "Zimmer 1",
+        "pinName20": "Generic Pin 20",
+        "pinName21": "Generic Pin 21",
+        "pinName22": "Generic Pin 22",
+        "pinName23": "Generic Pin 23",
+        "pinName24": "Generic Pin 24",
+        "pinName25": "Generic Pin 25",
+        "pinName26": "Generic Pin 26",
+        "pinName27": "Generic Pin 27",
+        "pinName28": "Generic Pin 28",
+        "pinName29": "Generic Pin 29",
+        "pinName3": "Zimmer 3",
+        "pinName30": "Generic Pin 30",
+        "pinName31": "Generic Pin 31",
+        "pinName32": "Generic Pin 32",
+        "pinName33": "Generic Pin 33",
+        "pinName34": "Generic Pin 34",
+        "pinName35": "Generic Pin 35",
+        "pinName36": "Generic Pin 36",
+        "pinName37": "Generic Pin 37",
+        "pinName38": "Generic Pin 38",
+        "pinName39": "Generic Pin 39",
+        "pinName4": "Zimmer 4",
+        "pinName40": "Generic Pin 40",
+        "pinName41": "Generic Pin 41",
+        "pinName42": "Generic Pin 42",
+        "pinName43": "Generic Pin 43",
+        "pinName44": "Generic Pin 44",
+        "pinName45": "Generic Pin 45",
+        "pinName46": "Generic Pin 46",
+        "pinName47": "Generic Pin 47",
+        "pinName48": "Generic Pin 48",
+        "pinName49": "Generic Pin 49",
+        "pinName5": "Zimmer 5",
+        "pinName50": "Generic Pin 50",
+        "pinName51": "Generic Pin 51",
+        "pinName52": "Generic Pin 52",
+        "pinName53": "Generic Pin 53",
+        "pinName54": "Generic Pin 54",
+        "pinName55": "Generic Pin 55",
+        "pinName56": "Generic Pin 56",
+        "pinName57": "Generic Pin 57",
+        "pinName58": "Generic Pin 58",
+        "pinName59": "Generic Pin 59",
+        "pinName6": "Generic Pin 6",
+        "pinName60": "Generic Pin 60",
+        "pinName61": "Generic Pin 61",
+        "pinName62": "Generic Pin 62",
+        "pinName63": "Generic Pin 63",
+        "pinName64": "Generic Pin 64",
+        "pinName65": "Generic Pin 65",
+        "pinName66": "Generic Pin 66",
+        "pinName67": "Generic Pin 67",
+        "pinName68": "Generic Pin 68",
+        "pinName69": "Generic Pin 69",
+        "pinName7": "Generic Pin 7",
+        "pinName70": "Generic Pin 70",
+        "pinName71": "Generic Pin 71",
+        "pinName72": "Generic Pin 72",
+        "pinName73": "Generic Pin 73",
+        "pinName74": "Generic Pin 74",
+        "pinName75": "Generic Pin 75",
+        "pinName76": "Generic Pin 76",
+        "pinName77": "Generic Pin 77",
+        "pinName78": "Generic Pin 78",
+        "pinName79": "Generic Pin 79",
+        "pinName8": "Generic Pin 8",
+        "pinName80": "Generic Pin 80",
+        "pinName81": "Generic Pin 81",
+        "pinName82": "Generic Pin 82",
+        "pinName83": "Generic Pin 83",
+        "pinName84": "Generic Pin 84",
+        "pinName85": "Generic Pin 85",
+        "pinName86": "Generic Pin 86",
+        "pinName87": "Generic Pin 87",
+        "pinName88": "Generic Pin 88",
+        "pinName89": "Generic Pin 89",
+        "pinName9": "Generic Pin 9",
+        "pinName90": "Generic Pin 90",
+        "pinName91": "Generic Pin 91",
+        "pinName92": "Generic Pin 92",
+        "pinName93": "Generic Pin 93",
+        "pinName94": "Generic Pin 94",
+        "pinName95": "Generic Pin 95",
+        "pinName96": "Generic Pin 96",
+        "pinName97": "Generic Pin 97",
+        "pinName98": "Generic Pin 98",
+        "pinName99": "Generic Pin 99"
+    }
+}
