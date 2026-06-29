@@ -16,5 +16,10 @@ class PMSClient:
         response.raise_for_status()
         return response.json()
     
+    def update_common_pins(self, pins: dict):
+        response = self.client.post("/TesaHotelPlatform/REST/systemConfig/commonPins", json=pins)
+        response.raise_for_status()
+        return response.json()
+    
     def close(self):
         self.client.close()
