@@ -70,5 +70,11 @@ class Database:
         ''', values)
         self.conn.commit()
 
+    def list_active_reservations(self):
+        self.cursor.execute('''
+            SELECT * FROM reservations WHERE status = 'confirmed'
+        ''')
+        return self.cursor.fetchall()
+
     def close(self):
         self.conn.close()
