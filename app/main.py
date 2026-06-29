@@ -3,6 +3,9 @@ from pms_client import PMSClient
 pms = PMSClient()
 
 pms.login()
-print(pms.test_session())
+
+data = pms.get_common_pins()
+
+print(data)
 
 pms.close()

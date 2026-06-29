@@ -11,9 +11,10 @@ class PMSClient:
         response.raise_for_status()
         return response.json()
     
-    def test_session(self):
-        response = self.client.get("/TesaHotelPlatform/REST/user/me")
-        return response.status_code, response.json()
+    def get_common_pins(self):
+        response = self.client.get("/TesaHotelPlatform/REST/systemConfig/commonPins")
+        response.raise_for_status()
+        return response.json()
     
     def close(self):
         self.client.close()
