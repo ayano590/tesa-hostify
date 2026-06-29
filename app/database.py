@@ -70,6 +70,12 @@ class Database:
         ''', values)
         self.conn.commit()
 
+    def delete_reservation(self, hostify_id):
+        self.cursor.execute('''
+            DELETE FROM reservations WHERE hostify_id = ?
+        ''', (hostify_id,))
+        self.conn.commit()
+
     def list_active_reservations(self):
         self.cursor.execute('''
             SELECT * FROM reservations WHERE status = 'confirmed'

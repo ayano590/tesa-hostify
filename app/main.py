@@ -2,9 +2,10 @@ from database import Database
 
 db = Database()
 
-rows = db.list_active_reservations()
+db.delete_reservation("12345")
 
-for row in rows:
-    print(dict(row))
+row = db.get_reservation_by_hostify_id("12345")
+
+print(row)  # This should print None if the reservation was successfully deleted
 
 db.close()
