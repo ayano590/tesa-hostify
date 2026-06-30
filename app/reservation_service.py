@@ -1,5 +1,8 @@
 import datetime
 from code_generator import generate_door_code
+import logging
+
+logger = logging.getLogger("reservation")
 
 class ReservationService:
     def __init__(self, db, sync_to_tesa):
@@ -21,6 +24,7 @@ class ReservationService:
             "status": payload["status"]
         }
 
+        logger.info(f"Upsert reservation {payload["hostify_id"]} status={payload["status"]}")
         self.db.upsert_reservation(data)
 
     def process_status_changes(self):
@@ -31,6 +35,7 @@ class ReservationService:
             new_status = self._compute_status(r, now)
 
             if r["status"] != new_status:
+                logger.info(f"Updating reservation {r["hostify_id"]} status to {new_status}.")
                 self.db.update_reservation_status(r["hostify_id"], new_status)
                 self.sync.sync_to_tesa(r["status"], r["room_number"], r["door_code"])
 

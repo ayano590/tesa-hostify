@@ -1,29 +1,36 @@
 from tesa_client import TESAClient
+import logging
+
+logger = logging.getLogger("tesa")
 
 PIN_KEYS = ["pin1", "pin2", "pin3", "pin4", "pin5"]
 
 def sync_to_tesa(status, room_number, door_code):
     
     if status != "active":
+        logger.info("Reservation is not active, skipping sync.")
         return {"status": "no_changes"}
 
     tesa = TESAClient()
 
     try:
+        logger.info("Logging into TESA...")
         tesa.login()
+        logger.info("Login successful.")
     except Exception as e:
-        return {
-            "status": "error",
-            "stage": "login",
-            "reason": str(e)
-        }
+        logger.error(f"Error occurred while logging into TESA: {e}")
+        return {"status": "error", "stage": "login"}
 
     try:
         current = tesa.get_common_pins()["commonPinsInfo"]
 
         pin = map_room_to_pin(room_number)
+
         if not pin:
+            logger.error(f"Unknown room number: {room_number}")
             return {"status": "error", "reason": "unknown_room"}
+        
+        logger.info(f"Updating pin={pin}")
 
         current[pin] = door_code
 
@@ -31,20 +38,20 @@ def sync_to_tesa(status, room_number, door_code):
 
         result = tesa.update_common_pins(payload)
 
+        logger.info(f"TESA update success pin={pin}")
+
         return {"status": "updated", "result": result}
 
     except Exception as e:
-        return {
-            "status": "error",
-            "stage": "sync",
-            "reason": str(e)
-        }
+        logger.error(f"Error occurred while syncing to TESA: {e}")
+        return {"status": "error", "stage": "sync"}
 
     finally:
         try:
             tesa.close()
+            logger.info("TESA client closed.")
         except Exception:
-            pass
+            logger.warning("Error occurred while closing TESA client.")
 
 def map_room_to_pin(room_number):
     return {

@@ -4,6 +4,9 @@ from database import Database
 from reservation_service import ReservationService
 from sync import sync_to_tesa
 from scheduler import start_scheduler, stop_scheduler
+from logging_setup import setup_logging
+
+setup_logging()
 
 # --- init core components ---
 db = Database()
