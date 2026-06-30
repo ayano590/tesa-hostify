@@ -59,11 +59,11 @@ class Database:
 
         self.conn.commit()
 
-    def get_reservation_by_hostify_id(self, hostify_id):
-        self.cursor.execute('''
-            SELECT * FROM reservations WHERE hostify_id = ?
-        ''', (hostify_id,))
-        return self.cursor.fetchone()
+    # def get_reservation_by_hostify_id(self, hostify_id):
+    #     self.cursor.execute('''
+    #         SELECT * FROM reservations WHERE hostify_id = ?
+    #     ''', (hostify_id,))
+    #     return self.cursor.fetchone()
     
     def update_reservation_status(self, hostify_id, status):
         self.cursor.execute('''
@@ -72,10 +72,10 @@ class Database:
         self.conn.commit()
         return self.cursor.rowcount
 
-    def delete_reservation(self, hostify_id):
+    def delete_old_reservations(self):
         self.cursor.execute('''
-            DELETE FROM reservations WHERE hostify_id = ?
-        ''', (hostify_id,))
+            DELETE FROM reservations WHERE departure < datetime('now', '-30 days')
+        ''')
         self.conn.commit()
 
     def list_all_reservations(self):
