@@ -1,26 +1,29 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from scheduler import start_scheduler, stop_scheduler
-from sync import SyncService
-from reservation_service import ReservationService
 from database import Database
-from pms_client import PMSClient
+from reservation_service import ReservationService
+from sync import sync_to_tesa
+from scheduler import start_scheduler, stop_scheduler
 
+# --- init core components ---
 db = Database()
-pms = PMSClient()
-sync_service = SyncService(db, pms)
-service = ReservationService(db, sync_service)
+service = ReservationService(db, sync_to_tesa)
 
+# --- scheduler job wrapper ---
 def job():
     service.process_status_changes()
 
+# --- FastAPI app with lifespan event ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup
     start_scheduler(job)
     yield
-
-    # shutdown
     stop_scheduler()
 
 app = FastAPI(lifespan=lifespan)
+
+# --- Hostify webhook endpoint ---
+@app.post("/webhook/hostify")
+def hostify_webhook(payload: dict):
+    service.upsert_reservation(payload)
+    return {"status": "success"}

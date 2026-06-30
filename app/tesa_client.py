@@ -1,13 +1,13 @@
 import httpx
 
-from config import PMS_BASE_URL, PMS_USERNAME, PMS_PASSWORD
+from config import TESA_BASE_URL, TESA_USERNAME, TESA_PASSWORD
 
-class PMSClient:
+class TESAClient:
     def __init__(self):
-        self.client = httpx.Client(base_url=PMS_BASE_URL, verify=False, timeout=30)
+        self.client = httpx.Client(base_url=TESA_BASE_URL, verify=False, timeout=30)
 
     def login(self):
-        response = self.client.post("/TesaHotelPlatform/REST/user/login", json={"userName": PMS_USERNAME, "password": PMS_PASSWORD})
+        response = self.client.post("/TesaHotelPlatform/REST/user/login", json={"userName": TESA_USERNAME, "password": TESA_PASSWORD})
         response.raise_for_status()
         return response.json()
     

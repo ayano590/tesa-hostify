@@ -26,7 +26,7 @@ class Database:
         ''')
         self.conn.commit()
 
-    def insert_reservation(self, data):
+    def upsert_reservation(self, data):
         self.cursor.execute('''
             INSERT INTO reservations (
                             hostify_id,
@@ -39,6 +39,14 @@ class Database:
                             created_at,
                             updated_at
                             ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT(hostify_id) DO UPDATE SET
+                guest_name=excluded.guest_name,
+                room_number=excluded.room_number,
+                door_code=excluded.door_code,
+                arrival=excluded.arrival,
+                departure=excluded.departure,
+                status=excluded.status,
+                updated_at=excluded.updated_at
         ''', (
             data["hostify_id"],
             data["guest_name"],
@@ -57,18 +65,12 @@ class Database:
         ''', (hostify_id,))
         return self.cursor.fetchone()
     
-    def update_reservation_fields(self, hostify_id, fields):
-        if not fields:
-            return  # No fields to update
-        
-        set_clause = ', '.join([f"{key} = ?" for key in fields.keys()])
-        values = list(fields.values())
-        values.append(hostify_id)
-
-        self.cursor.execute(f'''
-            UPDATE reservations SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE hostify_id = ?
-        ''', values)
+    def update_reservation_status(self, hostify_id, status):
+        self.cursor.execute('''
+            UPDATE reservations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE hostify_id = ?
+        ''', (status, hostify_id))
         self.conn.commit()
+        return self.cursor.rowcount
 
     def delete_reservation(self, hostify_id):
         self.cursor.execute('''
@@ -76,9 +78,9 @@ class Database:
         ''', (hostify_id,))
         self.conn.commit()
 
-    def list_active_reservations(self):
+    def list_all_reservations(self):
         self.cursor.execute('''
-            SELECT * FROM reservations WHERE status = 'active'
+            SELECT * FROM reservations
         ''')
         return self.cursor.fetchall()
 
