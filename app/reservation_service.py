@@ -1,9 +1,27 @@
 import datetime
+from code_generator import generate_door_code
 
 class ReservationService:
     def __init__(self, db, sync_to_tesa):
         self.db = db
         self.sync = sync_to_tesa
+
+    def upsert_reservation(self, payload):
+        hostify_id = payload["hostify_id"]
+        room_number = payload["room_number"]
+        door_code = generate_door_code(room_number, hostify_id)
+
+        data = {
+            "hostify_id": hostify_id,
+            "guest_name": payload["guest_name"],
+            "room_number": room_number,
+            "door_code": door_code,
+            "arrival": payload["arrival"],
+            "departure": payload["departure"],
+            "status": payload["status"]
+        }
+
+        self.db.upsert_reservation(data)
 
     def process_status_changes(self):
         reservations = self.db.list_all_reservations()

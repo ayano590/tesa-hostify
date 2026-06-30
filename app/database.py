@@ -51,7 +51,7 @@ class Database:
             data["hostify_id"],
             data["guest_name"],
             data["room_number"],
-            data.get("door_code"),
+            data["door_code"],
             data["arrival"],
             data["departure"],
             data["status"]
