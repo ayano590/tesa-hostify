@@ -1,15 +1,10 @@
-from dotenv import load_dotenv
-import os
 from tesa_client import TESAClient
 
-load_dotenv()
-
-MAIN_ENTRANCE_PIN = os.getenv("MAIN_ENTRANCE_PIN")
 PIN_KEYS = ["pin1", "pin2", "pin3", "pin4", "pin5"]
 
 def sync_to_tesa(status, room_number, door_code):
     
-    if status not in ("active", "completed"):
+    if status != "active":
         return {"status": "no_changes"}
 
     tesa = TESAClient()
@@ -30,7 +25,7 @@ def sync_to_tesa(status, room_number, door_code):
         if not pin:
             return {"status": "error", "reason": "unknown_room"}
 
-        current[pin] = door_code if status == "active" else ""
+        current[pin] = door_code
 
         payload = {k: current.get(k, "") for k in PIN_KEYS}
 
@@ -48,7 +43,7 @@ def sync_to_tesa(status, room_number, door_code):
     finally:
         try:
             tesa.close()
-        except:
+        except Exception:
             pass
 
 def map_room_to_pin(room_number):
