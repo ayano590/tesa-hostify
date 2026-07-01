@@ -13,7 +13,7 @@ class Database:
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS reservations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                hostify_id TEXT UNIQUE,
+                reservation_id TEXT UNIQUE,
                 guest_name TEXT,
                 room_number TEXT,
                 door_code TEXT,
@@ -29,7 +29,7 @@ class Database:
     def upsert_reservation(self, data):
         self.cursor.execute('''
             INSERT INTO reservations (
-                            hostify_id,
+                            reservation_id,
                             guest_name,
                             room_number,
                             door_code,
@@ -39,7 +39,7 @@ class Database:
                             created_at,
                             updated_at
                             ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ON CONFLICT(hostify_id) DO UPDATE SET
+            ON CONFLICT(reservation_id) DO UPDATE SET
                 guest_name=excluded.guest_name,
                 room_number=excluded.room_number,
                 door_code=excluded.door_code,
@@ -48,7 +48,7 @@ class Database:
                 status=excluded.status,
                 updated_at=excluded.updated_at
         ''', (
-            data["hostify_id"],
+            data["reservation_id"],
             data["guest_name"],
             data["room_number"],
             data["door_code"],
@@ -59,16 +59,16 @@ class Database:
 
         self.conn.commit()
 
-    # def get_reservation_by_hostify_id(self, hostify_id):
+    # def get_reservation_by_reservation_id(self, reservation_id):
     #     self.cursor.execute('''
-    #         SELECT * FROM reservations WHERE hostify_id = ?
-    #     ''', (hostify_id,))
+    #         SELECT * FROM reservations WHERE reservation_id = ?
+    #     ''', (reservation_id,))
     #     return self.cursor.fetchone()
     
-    def update_reservation_status(self, hostify_id, status):
+    def update_reservation_status(self, reservation_id, status):
         self.cursor.execute('''
-            UPDATE reservations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE hostify_id = ?
-        ''', (status, hostify_id))
+            UPDATE reservations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE reservation_id = ?
+        ''', (status, reservation_id))
         self.conn.commit()
         return self.cursor.rowcount
 

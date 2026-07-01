@@ -10,12 +10,12 @@ class ReservationService:
         self.sync = sync_to_tesa
 
     def upsert_reservation(self, payload):
-        hostify_id = payload["hostify_id"]
+        reservation_id = payload["reservation_id"]
         room_number = payload["room_number"]
-        door_code = generate_door_code(room_number, hostify_id)
+        door_code = generate_door_code(room_number, reservation_id)
 
         data = {
-            "hostify_id": hostify_id,
+            "reservation_id": reservation_id,
             "guest_name": payload["guest_name"],
             "room_number": room_number,
             "door_code": door_code,
@@ -24,7 +24,7 @@ class ReservationService:
             "status": payload["status"]
         }
 
-        logger.info(f"Upsert reservation {payload["hostify_id"]} status={payload["status"]}")
+        logger.info(f"Upsert reservation {payload["reservation_id"]} status={payload["status"]}")
         self.db.upsert_reservation(data)
 
     def delete_old_reservations(self):
@@ -39,8 +39,8 @@ class ReservationService:
             new_status = self._compute_status(r, now)
 
             if r["status"] != new_status:
-                logger.info(f"Updating reservation {r["hostify_id"]} status to {new_status}.")
-                self.db.update_reservation_status(r["hostify_id"], new_status)
+                logger.info(f"Updating reservation {r["reservation_id"]} status to {new_status}.")
+                self.db.update_reservation_status(r["reservation_id"], new_status)
                 self.sync.sync_to_tesa(r["status"], r["room_number"], r["door_code"])
 
     def _compute_status(self, r, now):
@@ -51,7 +51,7 @@ class ReservationService:
             return "cancelled"
 
         if now < arrival:
-            return "confirmed"
+            return "accepted"
         
         if arrival <= now <= departure:
             return "active"

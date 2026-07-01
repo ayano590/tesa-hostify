@@ -36,11 +36,10 @@ router = APIRouter()
 async def hostify_webhook(request: Request):
     try:
         payload = await request.json()
-        logger.info(f"Webhook received: payload={payload}")  # remove later!
-        logger.info(f"Webhook received: hostify_id={payload.get('hostify_id')}")
+        logger.info(f"Webhook received: payload={payload}")
 
-        if "hostify_id" not in payload:
-            return {"status": "error", "reason": "Missing hostify_id in payload"}
+        if "reservation_id" not in payload:
+            return {"status": "error", "reason": "Missing reservation_id in payload"}
         
         return service.upsert_reservation(payload)
     
