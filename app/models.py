@@ -2,8 +2,8 @@ hostify_webhook_response = {
     "data": {
         "reservation": {
             "status": "accepted",
-            "checkIn": "2026-07-03",  # check time format, add exact time, refactor arrival
-            "checkOut": "2026-07-06",  # check time format, add exact time, refactor departure
+            "checkIn": "2026-07-03",
+            "checkOut": "2026-07-06",
             "custom_fields": [{  # send door_code later to Hostify
                 "id": "123456",
                 "name": "door_code",

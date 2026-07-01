@@ -4,6 +4,9 @@ import logging
 
 logger = logging.getLogger("reservation")
 
+CHECKIN_HOUR = 15
+CHECKOUT_HOUR = 10
+
 class ReservationService:
     def __init__(self, db, sync_to_tesa):
         self.db = db
@@ -13,14 +16,16 @@ class ReservationService:
         reservation_id = payload["reservation_id"]
         room_number = payload["data"]["listing"]["nickname"]
         door_code = generate_door_code(room_number, reservation_id)
+        checkIn = payload["data"]["reservation"]["checkIn"].replace(hour=CHECKIN_HOUR, minute=0, second=0, microsecond=0)
+        checkOut = payload["data"]["reservation"]["checkOut"].replace(hour=CHECKOUT_HOUR, minute=0, second=0, microsecond=0)
 
         data = {
             "reservation_id": reservation_id,
             "guest_name": payload["data"]["guest"]["name"],
             "room_number": room_number,
             "door_code": door_code,
-            "arrival": payload["data"]["reservation"]["checkIn"],
-            "departure": payload["data"]["reservation"]["checkOut"],
+            "checkIn": checkIn,
+            "checkOut": checkOut,
             "status": payload["data"]["reservation"]["status"]
         }
 
@@ -44,19 +49,19 @@ class ReservationService:
                 self.sync.sync_to_tesa(r["status"], r["room_number"], r["door_code"])
 
     def _compute_status(self, r, now):
-        arrival = datetime.fromisoformat(r["arrival"])
-        departure = datetime.fromisoformat(r["departure"])
+        checkIn = datetime.fromisoformat(r["checkIn"])
+        checkOut = datetime.fromisoformat(r["checkOut"])
 
         if r["status"] == "cancelled":
             return "cancelled"
 
-        if now < arrival:
+        if now < checkIn:
             return "accepted"
         
-        if arrival <= now <= departure:
+        if checkIn <= now <= checkOut:
             return "active"
         
-        if now > departure:
+        if now > checkOut:
             return "completed"
         
         return r["status"]

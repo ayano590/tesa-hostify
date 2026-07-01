@@ -17,8 +17,8 @@ class Database:
                 guest_name TEXT,
                 room_number TEXT,
                 door_code TEXT,
-                arrival TIMESTAMP,
-                departure TIMESTAMP,
+                checkIn TIMESTAMP,
+                checkOut TIMESTAMP,
                 status TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -33,8 +33,8 @@ class Database:
                             guest_name,
                             room_number,
                             door_code,
-                            arrival,
-                            departure,
+                            checkIn,
+                            checkOut,
                             status,
                             created_at,
                             updated_at
@@ -43,8 +43,8 @@ class Database:
                 guest_name=excluded.guest_name,
                 room_number=excluded.room_number,
                 door_code=excluded.door_code,
-                arrival=excluded.arrival,
-                departure=excluded.departure,
+                checkIn=excluded.checkIn,
+                checkOut=excluded.checkOut,
                 status=excluded.status,
                 updated_at=excluded.updated_at
         ''', (
@@ -52,8 +52,8 @@ class Database:
             data["guest_name"],
             data["room_number"],
             data["door_code"],
-            data["arrival"],
-            data["departure"],
+            data["checkIn"],
+            data["checkOut"],
             data["status"]
         ))
 
@@ -74,7 +74,7 @@ class Database:
 
     def delete_old_reservations(self):
         self.cursor.execute('''
-            DELETE FROM reservations WHERE departure < datetime('now', '-30 days')
+            DELETE FROM reservations WHERE checkOut < datetime('now', '-30 days')
         ''')
         self.conn.commit()
 
