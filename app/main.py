@@ -36,6 +36,7 @@ router = APIRouter()
 async def hostify_webhook(request: Request):
     try:
         payload = await request.json()
+        logger.info(f"Webhook received: payload={payload}")  # remove later!
         logger.info(f"Webhook received: hostify_id={payload.get('hostify_id')}")
 
         if "hostify_id" not in payload:

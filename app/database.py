@@ -5,7 +5,7 @@ DB_PATH = Path("hotel.db")
 
 class Database:
     def __init__(self):
-        self.conn = sqlite3.connect(DB_PATH)
+        self.conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
 
