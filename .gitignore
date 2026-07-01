@@ -2,4 +2,5 @@ app/__pycache__
 app/app.log
 app/hotel.db
 captures/hostify_new_reservation.json
+venv/
 .env
