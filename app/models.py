@@ -22,3 +22,14 @@ hostify_webhook_response = {
     "auth": ["secret_key"],
     "action": "new_reservation"
 }
+
+hostify_webhook_event_types = [
+    "message_new",
+    "move_reservation",
+    "new_reservation",
+    "update_reservation",
+    "create_listing",
+    "update_listing",
+    "create_update_listing",
+    "listing_photo_processed"
+]
