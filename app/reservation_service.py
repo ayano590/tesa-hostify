@@ -27,6 +27,10 @@ class ReservationService:
         logger.info(f"Upsert reservation {payload["hostify_id"]} status={payload["status"]}")
         self.db.upsert_reservation(data)
 
+    def delete_old_reservations(self):
+        logger.info("Deleting old reservations...")
+        self.db.delete_old_reservations()
+
     def process_status_changes(self):
         reservations = self.db.list_all_reservations()
         now = datetime.now()

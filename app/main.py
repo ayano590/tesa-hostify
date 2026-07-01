@@ -18,6 +18,7 @@ service = ReservationService(db, sync_to_tesa)
 # --- scheduler job wrapper ---
 def job():
     service.process_status_changes()
+    service.delete_old_reservations()
 
 # --- FastAPI app with lifespan event ---
 @asynccontextmanager
