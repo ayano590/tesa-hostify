@@ -27,8 +27,8 @@ def sync_to_tesa(status, room_number, door_code):
         pin = map_room_to_pin(room_number)
 
         if not pin:
-            logger.error(f"Unknown room number: {room_number}")
-            return {"status": "error", "reason": "unknown_room"}
+            logger.info(f"Ignored room number {room_number}")
+            return {"status": "no_changes"}
         
         logger.info(f"Updating pin={pin}")
 
