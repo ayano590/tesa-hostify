@@ -3,6 +3,6 @@ import os
 
 load_dotenv()
 
-PMS_BASE_URL = os.getenv("PMS_BASE_URL")
-PMS_USERNAME = os.getenv("PMS_USERNAME")
-PMS_PASSWORD = os.getenv("PMS_PASSWORD")
+TESA_BASE_URL = os.getenv("TESA_BASE_URL")
+TESA_USERNAME = os.getenv("TESA_USERNAME")
+TESA_PASSWORD = os.getenv("TESA_PASSWORD")
