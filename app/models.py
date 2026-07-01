@@ -1,7 +1,7 @@
 hostify_webhook_response = {
     "data": {
         "reservation": {
-            "status": "accepted",  # use for status
+            "status": "accepted",
             "checkIn": "2026-07-03",  # check time format, add exact time, refactor arrival
             "checkOut": "2026-07-06",  # check time format, add exact time, refactor departure
             "custom_fields": [{  # send door_code later to Hostify
@@ -11,10 +11,10 @@ hostify_webhook_response = {
             }]
         },
         "listing": {
-            "nickname": "4"  # use for room_number
+            "nickname": "4"
         },
         "guest": {
-            "name": "John Doe"  # use for guest_name
+            "name": "John Doe"
         },
         "transactions": []
     },

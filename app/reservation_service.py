@@ -11,20 +11,20 @@ class ReservationService:
 
     def upsert_reservation(self, payload):
         reservation_id = payload["reservation_id"]
-        room_number = payload["room_number"]
+        room_number = payload["data"]["listing"]["nickname"]
         door_code = generate_door_code(room_number, reservation_id)
 
         data = {
             "reservation_id": reservation_id,
-            "guest_name": payload["guest_name"],
+            "guest_name": payload["data"]["guest"]["name"],
             "room_number": room_number,
             "door_code": door_code,
-            "arrival": payload["arrival"],
-            "departure": payload["departure"],
-            "status": payload["status"]
+            "arrival": payload["data"]["reservation"]["checkIn"],
+            "departure": payload["data"]["reservation"]["checkOut"],
+            "status": payload["data"]["reservation"]["status"]
         }
 
-        logger.info(f"Upsert reservation {payload["reservation_id"]} status={payload["status"]}")
+        logger.info(f"Upsert reservation {payload["reservation_id"]} status={payload["data"]["reservation"]["status"]}")
         self.db.upsert_reservation(data)
 
     def delete_old_reservations(self):
