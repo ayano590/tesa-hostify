@@ -19,15 +19,15 @@ def send_door_code_to_hostify(reservation_id, custom_field_id, door_code):
         "Content-Type": "application/json"
     }
     payload = {
-        "reservation_id": reservation_id,
-        "custom_field_id": custom_field_id,
-        "value": door_code
+        "reservation_id": int(reservation_id),
+        "custom_field_id": int(custom_field_id),
+        "value": str(door_code)
     }
 
     with httpx.Client() as client:
         try:
             logger.info(f"Sending door code to Hostify...")
-            response = client.put(url, headers=headers, json=payload)
+            response = client.post(url, headers=headers, json=payload)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
