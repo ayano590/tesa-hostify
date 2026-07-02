@@ -1,6 +1,4 @@
-call init_db() on server PC when going live
-
-Dashboard > Networking > Tunnels > "your tunnel name" > Overview
+Dashboard > Networking > Tunnels > "your-tunnel-name" > Overview
 Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Cloudflared\ImagePath
 
 curl -X 'GET' 'https://api-rms.hostify.com/webhooks_v2' -H 'accept: */*' -H 'x-api-key: api-key'

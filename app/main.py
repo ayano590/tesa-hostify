@@ -4,7 +4,6 @@ import logging
 
 from database import Database
 from reservation_service import ReservationService
-from sync import sync_to_tesa
 from scheduler import start_scheduler, stop_scheduler
 from logging_setup import setup_logging
 
@@ -42,7 +41,7 @@ router = APIRouter()
 async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         payload = await request.json()
-        logger.info(f"Webhook received: payload={payload}")
+        logger.info(f"Webhook received.")
 
         event_type = payload["action"]
 

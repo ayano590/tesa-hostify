@@ -1,6 +1,4 @@
 from datetime import datetime
-# from hostify_client import send_door_code_to_hostify
-# from code_generator import generate_door_code
 from sync import sync_to_tesa
 import logging
 
@@ -30,9 +28,6 @@ class ReservationService:
         checkOut = datetime.fromisoformat(f"{checkOutStr}T{planned_departure}")
 
         custom_fields = payload["data"]["reservation"]["custom_fields"]
-        # custom_field_id = next((field["id"] for field in custom_fields if field["name"] == "door_code"), None)
-
-        # door_code = generate_door_code(room_number, reservation_id)
         door_code = next((field["value"] for field in custom_fields if field["name"] == "door_code"), None)
 
         data = {
@@ -47,8 +42,6 @@ class ReservationService:
 
         logger.info(f"Upsert reservation {payload["reservation_id"]} status={payload["data"]["reservation"]["status"]}")
         self.db.upsert_reservation(data)
-
-        # send_door_code_to_hostify(reservation_id, custom_field_id, door_code)
 
     def delete_old_reservations(self):
         logger.info("Deleting old reservations...")

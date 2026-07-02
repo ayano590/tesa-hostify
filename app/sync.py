@@ -31,6 +31,10 @@ def sync_to_tesa(status, room_number, door_code):
             logger.info(f"Ignored room number {room_number}")
             return {"status": "no_changes"}
         
+        if current[pin] == door_code:
+            logger.info("Door code is already up to date, no changes needed.")
+            return {"status": "no_changes"}
+        
         logger.info(f"Updating pin={pin}")
 
         current[pin] = door_code

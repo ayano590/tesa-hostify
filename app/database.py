@@ -59,12 +59,6 @@ class Database:
         ))
 
         self.conn.commit()
-
-    # def get_reservation_by_reservation_id(self, reservation_id):
-    #     self.cursor.execute('''
-    #         SELECT * FROM reservations WHERE reservation_id = ?
-    #     ''', (reservation_id,))
-    #     return self.cursor.fetchone()
     
     def update_reservation_status(self, reservation_id, status):
         self.cursor.execute('''
