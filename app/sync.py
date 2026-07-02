@@ -1,12 +1,13 @@
 from tesa_client import TESAClient
 import logging
 
-logger = logging.getLogger("tesa")
+logger = logging.getLogger("Tesa")
 
 PIN_KEYS = ["pin1", "pin2", "pin3", "pin4", "pin5"]
 
 def sync_to_tesa(status, room_number, door_code):
-    
+    logger.info(f"Syncing to TESA...")
+
     if status != "active":
         logger.info("Reservation is not active, skipping sync.")
         return {"status": "no_changes"}

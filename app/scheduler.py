@@ -10,9 +10,9 @@ def start_scheduler(job_func):
     scheduler.start()
     logger.info("Scheduler run started.")
 
-def stop_scheduler(db_conn):
+def stop_scheduler(db_shutdown):
     logger.info("Finishing last scheduler run. This may take up to 5 minutes. Please wait...")
     scheduler.shutdown(wait=True)
     logger.info("Scheduler run finished.")
 
-    db_conn.close()
+    db_shutdown()

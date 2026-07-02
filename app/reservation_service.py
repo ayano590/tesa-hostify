@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.hostify_client import send_door_code_to_hostify
+from hostify_client import send_door_code_to_hostify
 from code_generator import generate_door_code
 from sync import sync_to_tesa
 import logging
@@ -17,8 +17,10 @@ class ReservationService:
         reservation_id = payload["reservation_id"]
         room_number = payload["data"]["listing"]["nickname"]
         door_code = generate_door_code(room_number, reservation_id)
-        checkIn = payload["data"]["reservation"]["checkIn"].replace(hour=CHECKIN_HOUR, minute=0, second=0, microsecond=0)
-        checkOut = payload["data"]["reservation"]["checkOut"].replace(hour=CHECKOUT_HOUR, minute=0, second=0, microsecond=0)
+        checkInStr = payload["data"]["reservation"]["checkIn"]
+        checkIn = datetime.fromisoformat(checkInStr).replace(hour=CHECKIN_HOUR, minute=0, second=0)
+        checkOutStr = payload["data"]["reservation"]["checkOut"]
+        checkOut = datetime.fromisoformat(checkOutStr).replace(hour=CHECKOUT_HOUR, minute=0, second=0)
         custom_fields = payload["data"]["reservation"]["custom_fields"]
         custom_field_id = next((field["id"] for field in custom_fields if field["name"] == "door_code"), None)
 
@@ -42,6 +44,7 @@ class ReservationService:
         self.db.delete_old_reservations()
 
     def process_status_changes(self):
+        logger.info("Processing reservation status changes...")
         reservations = self.db.list_all_reservations()
         now = datetime.now()
 
