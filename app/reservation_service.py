@@ -1,5 +1,7 @@
 from datetime import datetime
+from app.hostify_client import send_door_code_to_hostify
 from code_generator import generate_door_code
+from sync import sync_to_tesa
 import logging
 
 logger = logging.getLogger("reservation")
@@ -8,9 +10,8 @@ CHECKIN_HOUR = 15
 CHECKOUT_HOUR = 10
 
 class ReservationService:
-    def __init__(self, db, sync_to_tesa):
+    def __init__(self, db):
         self.db = db
-        self.sync = sync_to_tesa
 
     def upsert_reservation(self, payload):
         reservation_id = payload["reservation_id"]
@@ -18,6 +19,8 @@ class ReservationService:
         door_code = generate_door_code(room_number, reservation_id)
         checkIn = payload["data"]["reservation"]["checkIn"].replace(hour=CHECKIN_HOUR, minute=0, second=0, microsecond=0)
         checkOut = payload["data"]["reservation"]["checkOut"].replace(hour=CHECKOUT_HOUR, minute=0, second=0, microsecond=0)
+        custom_fields = payload["data"]["reservation"]["custom_fields"]
+        custom_field_id = next((field["id"] for field in custom_fields if field["name"] == "door_code"), None)
 
         data = {
             "reservation_id": reservation_id,
@@ -31,6 +34,8 @@ class ReservationService:
 
         logger.info(f"Upsert reservation {payload["reservation_id"]} status={payload["data"]["reservation"]["status"]}")
         self.db.upsert_reservation(data)
+
+        send_door_code_to_hostify(reservation_id, custom_field_id, door_code)
 
     def delete_old_reservations(self):
         logger.info("Deleting old reservations...")
@@ -46,7 +51,7 @@ class ReservationService:
             if r["status"] != new_status:
                 logger.info(f"Updating reservation {r["reservation_id"]} status to {new_status}.")
                 self.db.update_reservation_status(r["reservation_id"], new_status)
-                self.sync.sync_to_tesa(r["status"], r["room_number"], r["door_code"])
+                sync_to_tesa(r["status"], r["room_number"], r["door_code"])
 
     def _compute_status(self, r, now):
         checkIn = datetime.fromisoformat(r["checkIn"])

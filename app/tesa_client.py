@@ -4,20 +4,20 @@ from config import TESA_BASE_URL, TESA_USERNAME, TESA_PASSWORD
 
 class TESAClient:
     def __init__(self):
-        self.client = httpx.Client(base_url=TESA_BASE_URL, verify=False, timeout=30)
+        self.client = httpx.Client(base_url=TESA_BASE_URL or "", verify=False, timeout=30)
 
     def login(self):
-        response = self.client.post("/TesaHotelPlatform/REST/user/login", json={"userName": TESA_USERNAME, "password": TESA_PASSWORD})
+        response = self.client.post("/user/login", json={"userName": TESA_USERNAME, "password": TESA_PASSWORD})
         response.raise_for_status()
         return response.json()
     
     def get_common_pins(self):
-        response = self.client.get("/TesaHotelPlatform/REST/systemConfig/commonPins")
+        response = self.client.get("/systemConfig/commonPins")
         response.raise_for_status()
         return response.json()
     
     def update_common_pins(self, pins: dict):
-        response = self.client.post("/TesaHotelPlatform/REST/systemConfig/commonPins", json=pins)
+        response = self.client.post("/systemConfig/commonPins", json=pins)
         response.raise_for_status()
         return response.json()
     

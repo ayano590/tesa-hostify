@@ -4,7 +4,7 @@ hw_new_reservation_response = {
             "status": "accepted",
             "checkIn": "2026-07-03",
             "checkOut": "2026-07-06",
-            "custom_fields": [{  # send door_code later to Hostify
+            "custom_fields": [{
                 "id": "123456",
                 "name": "door_code",
                 "value": "None"
@@ -51,3 +51,9 @@ hostify_webhook_event_types = [
     "create_update_listing",
     "listing_photo_processed"
 ]
+
+hostify_update_reservation_custom_field = {
+    "reservation_id": 1234567890,
+    "custom_field_id": 123456,
+    "value": "string"
+}

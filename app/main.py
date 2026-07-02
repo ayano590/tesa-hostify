@@ -14,7 +14,7 @@ db_logger = logging.getLogger("database")
 
 # --- init core components ---
 db = Database()
-service = ReservationService(db, sync_to_tesa)
+service = ReservationService(db)
 
 # --- init database ---
 db.init_db()
