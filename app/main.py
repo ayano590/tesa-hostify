@@ -10,7 +10,6 @@ from logging_setup import setup_logging
 
 setup_logging()
 logger = logging.getLogger("webhook")
-db_logger = logging.getLogger("database")
 
 # --- init core components ---
 db = Database()
