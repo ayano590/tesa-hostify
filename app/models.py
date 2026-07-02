@@ -1,4 +1,4 @@
-hostify_webhook_response = {
+hw_new_reservation_response = {
     "data": {
         "reservation": {
             "status": "accepted",
@@ -15,12 +15,30 @@ hostify_webhook_response = {
         },
         "guest": {
             "name": "John Doe"
-        },
-        "transactions": []
+        }
     },
     "reservation_id": 1234567890,
-    "auth": ["secret_key"],
     "action": "new_reservation"
+}
+
+hw_update_reservation_response = {
+    "planned_arrival": "16:00:00",
+    "planned_departure": "11:00:00",
+    "checkIn": "2026-07-03",
+    "checkOut": "2026-07-06",
+    "status_code": "8",  # cancelled
+    "reservation_id": "1234567890",
+    "action": "update_reservation"
+}
+
+hw_move_reservation_response = {
+    "data": {
+        "listing": {
+            "nickname": "5"
+        }
+    },
+    "reservation_id": "1234567890",
+    "action": "move_reservation"
 }
 
 hostify_webhook_event_types = [
