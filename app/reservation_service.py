@@ -1,6 +1,6 @@
 from datetime import datetime
-from hostify_client import send_door_code_to_hostify
-from code_generator import generate_door_code
+# from hostify_client import send_door_code_to_hostify
+# from code_generator import generate_door_code
 from sync import sync_to_tesa
 import logging
 
@@ -16,13 +16,15 @@ class ReservationService:
     def upsert_reservation(self, payload):
         reservation_id = payload["reservation_id"]
         room_number = payload["data"]["listing"]["nickname"]
-        door_code = generate_door_code(room_number, reservation_id)
         checkInStr = payload["data"]["reservation"]["checkIn"]
         checkIn = datetime.fromisoformat(checkInStr).replace(hour=CHECKIN_HOUR, minute=0, second=0)
         checkOutStr = payload["data"]["reservation"]["checkOut"]
         checkOut = datetime.fromisoformat(checkOutStr).replace(hour=CHECKOUT_HOUR, minute=0, second=0)
         custom_fields = payload["data"]["reservation"]["custom_fields"]
-        custom_field_id = next((field["id"] for field in custom_fields if field["name"] == "door_code"), None)
+        # custom_field_id = next((field["id"] for field in custom_fields if field["name"] == "door_code"), None)
+
+        # door_code = generate_door_code(room_number, reservation_id)
+        door_code = next((field["value"] for field in custom_fields if field["name"] == "door_code"), None)
 
         data = {
             "reservation_id": reservation_id,
@@ -37,7 +39,7 @@ class ReservationService:
         logger.info(f"Upsert reservation {payload["reservation_id"]} status={payload["data"]["reservation"]["status"]}")
         self.db.upsert_reservation(data)
 
-        send_door_code_to_hostify(reservation_id, custom_field_id, door_code)
+        # send_door_code_to_hostify(reservation_id, custom_field_id, door_code)
 
     def delete_old_reservations(self):
         logger.info("Deleting old reservations...")
