@@ -45,8 +45,11 @@ async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
         payload = await request.json()
         logger.info(f"Webhook received: payload={payload}")
 
-        if "reservation_id" not in payload:
-            return {"status": "error", "reason": "Missing reservation_id in payload"}
+        event_type = payload["action"]
+
+        if event_type not in ["new_reservation", "update_reservation", "move_reservation"]:
+            logger.info(f"Ignoring webhook action: {event_type}")
+            return {"status": "ignored", "message": f"Action {event_type} is not relevant."}
         
         background_tasks.add_task(service.upsert_reservation, payload)
         

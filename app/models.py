@@ -4,6 +4,8 @@ hw_new_reservation_response = {
             "status": "accepted",
             "checkIn": "2026-07-03",
             "checkOut": "2026-07-06",
+            "planned_arrival": "16:00:00",  # or "None"
+            "planned_departure": "11:00:00",  # or "None"
             "custom_fields": [{
                 "id": "123456",
                 "name": "door_code",
@@ -51,12 +53,6 @@ hostify_webhook_event_types = [
     "create_update_listing",
     "listing_photo_processed"
 ]
-
-ha_update_reservation_custom_field_payload = {
-    "reservation_id": 1234567890,
-    "custom_field_id": 123456,
-    "value": "string"
-}
 
 tesa_get_common_pins_response = {
     "type": "RESULT_OK",

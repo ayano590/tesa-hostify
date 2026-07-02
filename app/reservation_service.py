@@ -16,10 +16,19 @@ class ReservationService:
     def upsert_reservation(self, payload):
         reservation_id = payload["reservation_id"]
         room_number = payload["data"]["listing"]["nickname"]
+
         checkInStr = payload["data"]["reservation"]["checkIn"]
-        checkIn = datetime.fromisoformat(checkInStr).replace(hour=CHECKIN_HOUR, minute=0, second=0)
+        planned_arrival = payload["data"]["reservation"]["planned_arrival"]
+        if planned_arrival in ["00:00:00", "None", None, ""]:
+            planned_arrival = f"{CHECKIN_HOUR}:00:00"  # Default planned arrival time
+        checkIn = datetime.fromisoformat(f"{checkInStr}T{planned_arrival}")
+
         checkOutStr = payload["data"]["reservation"]["checkOut"]
-        checkOut = datetime.fromisoformat(checkOutStr).replace(hour=CHECKOUT_HOUR, minute=0, second=0)
+        planned_departure = payload["data"]["reservation"]["planned_departure"]
+        if planned_departure in ["00:00:00", "None", None, ""]:
+            planned_departure = f"{CHECKOUT_HOUR}:00:00"  # Default planned departure time
+        checkOut = datetime.fromisoformat(f"{checkOutStr}T{planned_departure}")
+
         custom_fields = payload["data"]["reservation"]["custom_fields"]
         # custom_field_id = next((field["id"] for field in custom_fields if field["name"] == "door_code"), None)
 
