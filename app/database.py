@@ -6,6 +6,7 @@ DB_PATH = Path("hotel.db")
 class Database:
     def __init__(self):
         self.conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
+        self.conn.execute("PRAGMA journal_mode=WAL;")
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
 
@@ -85,4 +86,5 @@ class Database:
         return self.cursor.fetchall()
 
     def close(self):
+        self.conn.execute("PRAGMA wal_checkpoint(TRUNCATE);")
         self.conn.close()

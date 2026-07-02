@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from code_generator import generate_door_code
 import logging
 
@@ -65,3 +65,10 @@ class ReservationService:
             return "completed"
         
         return r["status"]
+    
+    def close(self):
+        try:
+            logger.info("Closing database connection...")
+            self.db.close()
+        except Exception as e:
+            logger.error(f"Error closing database connection: {e}")
