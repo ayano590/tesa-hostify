@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger("Tesa")
 
-PIN_KEYS = ["pin1", "pin2", "pin3", "pin4", "pin5"]
+PIN_KEYS = ["pin1", "pin2", "pin3", "pin4", "pin5", "pin6", "pin7"]
 
 def sync_to_tesa(status, room_number, door_code):
     logger.info(f"Syncing to TESA...")
@@ -35,7 +35,7 @@ def sync_to_tesa(status, room_number, door_code):
             logger.info("Door code is already up to date, no changes needed.")
             return {"status": "no_changes"}
         
-        logger.info(f"Updating pin={pin}")
+        logger.info(f"Updating {pin}...")
 
         current[pin] = door_code
 
@@ -43,7 +43,7 @@ def sync_to_tesa(status, room_number, door_code):
 
         result = tesa.update_common_pins(payload)
 
-        logger.info(f"TESA update success pin={pin}")
+        logger.info(f"TESA update success {pin}")
 
         return {"status": "updated", "result": result}
 
@@ -61,7 +61,9 @@ def sync_to_tesa(status, room_number, door_code):
 def map_room_to_pin(room_number):
     return {
         "1": "pin2",
+        "2": "pin6",
         "3": "pin3",
         "4": "pin4",
         "5": "pin5",
+        "6": "pin7",
     }.get(str(room_number))
