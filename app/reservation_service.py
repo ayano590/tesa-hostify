@@ -52,6 +52,8 @@ class ReservationService:
         reservations = self.db.list_all_reservations()
         now = datetime.now()
 
+        active_reservations = []
+
         for r in reservations:
             new_status = self._compute_status(r, now)
 
@@ -60,11 +62,13 @@ class ReservationService:
                 logger.info(f"Updating reservation {r["reservation_id"]} status to {new_status}.")
                 self.db.update_reservation_status(r["reservation_id"], new_status)
 
-            # If the reservation is now active, sync it to TESA and TTLock
+            # If the reservation is now active, add it to the list of active reservations
             if new_status == "active":
-                logger.info(f"Syncing reservation {r["reservation_id"]} to TESA and TTLock...")
-                sync_to_tesa(r["room_number"], r["door_code"])
-                sync_to_ttlock(r["room_number"], r["door_code"])
+                active_reservations.append(r)
+
+        logger.info(f"Syncing {len(active_reservations)} active reservations to TESA and TTLock...")
+        sync_to_tesa(active_reservations)
+        sync_to_ttlock(active_reservations)
 
     def _compute_status(self, r, now):
         checkIn = datetime.fromisoformat(r["checkIn"])
