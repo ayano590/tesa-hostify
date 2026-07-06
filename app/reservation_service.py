@@ -1,5 +1,5 @@
 from datetime import datetime
-from sync import sync_to_tesa
+from sync import sync_to_tesa, sync_to_ttlock
 import logging
 
 logger = logging.getLogger("reservation")
@@ -55,10 +55,16 @@ class ReservationService:
         for r in reservations:
             new_status = self._compute_status(r, now)
 
+            # Update the status in the database if it has changed
             if r["status"] != new_status:
                 logger.info(f"Updating reservation {r["reservation_id"]} status to {new_status}.")
                 self.db.update_reservation_status(r["reservation_id"], new_status)
-                sync_to_tesa(r["status"], r["room_number"], r["door_code"])
+
+            # If the reservation is now active, sync it to TESA and TTLock
+            if new_status == "active":
+                logger.info(f"Syncing reservation {r["reservation_id"]} to TESA and TTLock...")
+                sync_to_tesa(r["room_number"], r["door_code"])
+                sync_to_ttlock(r["room_number"], r["door_code"])
 
     def _compute_status(self, r, now):
         checkIn = datetime.fromisoformat(r["checkIn"])
