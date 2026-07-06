@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger("reservation")
 
-CHECKIN_HOUR = 15
+CHECKIN_HOUR = 14  # 1 hour buffer for check-in time
 CHECKOUT_HOUR = 10
 
 class ReservationService:
