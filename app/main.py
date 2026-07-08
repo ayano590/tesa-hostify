@@ -12,6 +12,8 @@ setup_logging()
 logger = logging.getLogger("webhook")
 discord = DiscordNotifier()
 
+discord.info(title="Server start", description="")
+
 # --- init core components ---
 db = Database()
 service = ReservationService(db)
