@@ -6,16 +6,22 @@ from database import Database
 from reservation_service import ReservationService
 from scheduler import start_scheduler, stop_scheduler
 from logging_setup import setup_logging
+from monitoring import DiscordNotifier
 
 setup_logging()
 logger = logging.getLogger("webhook")
+discord = DiscordNotifier()
 
 # --- init core components ---
 db = Database()
 service = ReservationService(db)
 
 # --- init database ---
-db.init_db()
+try:
+    db.init_db()
+except Exception as e:
+    discord.error(title="Database Initialization Error", description=str(e))
+    logger.error(f"Error initializing database: {e}")
 
 # --- scheduler job wrapper ---
 def job():
@@ -54,6 +60,7 @@ async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
         return {"status": "success", "message": "Reservation data is being processed."}
     
     except Exception as e:
+        discord.error(title="Webhook Processing Error", description=str(e))
         logger.error(f"Error processing webhook: {e}")
         return {"status": "error", "reason": str(e)}
     

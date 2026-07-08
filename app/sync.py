@@ -1,9 +1,11 @@
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, wait_exponential
 from ttlock_client import TTLockClient
 from tesa_client import TESAClient
 import logging
+from monitoring import DiscordNotifier
 
 logger = logging.getLogger("sync")
+discord = DiscordNotifier()
 
 PIN_KEYS = ["pin1", "pin2", "pin3", "pin4", "pin5", "pin6", "pin7"]
 ROOM_TO_PIN = {
@@ -52,13 +54,15 @@ def sync_to_tesa(active_reservations):
     try:
         return _execute_tesa_sync(tesa, new_pins)
     except Exception as e:
+        discord.error(title="Tesa sync error", description=str(e))
         logger.error(f"Error occurred while syncing to TESA after retries: {e}")
         return {"status": "error", "stage": "sync_failed"}
     finally:
         try:
             tesa.close()
             logger.info("TESA client closed.")
-        except Exception:
+        except Exception as e:
+            discord.warning(title="Tesa Close error", description=str(e))
             logger.warning("Error occurred while closing TESA client.")
 
 
@@ -94,6 +98,7 @@ def sync_to_ttlock(active_reservations):
             try:
                 _retry_ttlock_update(ttlock, access_token, room_number, door_code)
             except Exception as e:
+                discord.error(title="TTLock sync error", description=str(e), fields=[{"name": "Room Number", "value": room_number}])
                 logger.error(f"Failed to update room {room_number} after multiple retries: {e}")
                 continue 
 
@@ -101,11 +106,13 @@ def sync_to_ttlock(active_reservations):
         return {"status": "success"}
 
     except Exception as e:
+        discord.error(title="TTLock critical error", description=str(e))
         logger.error(f"Critical error occurred while syncing to TTLock: {e}")
         return {"status": "error", "stage": "sync"}
     finally:
         try:
             ttlock.close()
             logger.info("TTLock client closed.")
-        except Exception:
+        except Exception as e:
+            discord.warning(title="TTLock Close error", description=str(e))
             logger.warning("Error occurred while closing TTLock client.")

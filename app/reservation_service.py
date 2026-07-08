@@ -1,8 +1,10 @@
 from datetime import datetime
 from sync import sync_to_tesa, sync_to_ttlock
 import logging
+from monitoring import DiscordNotifier
 
 logger = logging.getLogger("reservation")
+discord = DiscordNotifier()
 
 CHECKIN_HOUR = 14  # 1 hour buffer for check-in time
 CHECKOUT_HOUR = 10
@@ -40,16 +42,30 @@ class ReservationService:
             "status": payload["data"]["reservation"]["status"]
         }
 
-        logger.info(f"Upsert reservation {payload["reservation_id"]} status={payload["data"]["reservation"]["status"]}")
-        self.db.upsert_reservation(data)
+        try:
+            logger.info(f"Upsert reservation {payload['reservation_id']} status={payload['data']['reservation']['status']}")
+            self.db.upsert_reservation(data)
+        except Exception as e:
+            discord.error(title="Reservation Upsert Error", description=str(e), fields=[{"name": "Reservation ID", "value": reservation_id}, {"name": "Room Number", "value": room_number}])
+            logger.error(f"Error upserting reservation: {e}")
 
     def delete_old_reservations(self):
-        logger.info("Deleting old reservations...")
-        self.db.delete_old_reservations()
+        try:
+            logger.info("Deleting old reservations...")
+            self.db.delete_old_reservations()
+        except Exception as e:
+            discord.error(title="Delete Old Reservations Error", description=str(e))
+            logger.error(f"Error deleting old reservations: {e}")
 
     def process_status_changes(self):
-        logger.info("Processing reservation status changes...")
-        reservations = self.db.list_all_reservations()
+        try:
+            logger.info("Processing reservation status changes...")
+            reservations = self.db.list_all_reservations()
+        except Exception as e:
+            discord.error(title="List All Reservations Error", description=str(e))
+            logger.error(f"Error listing all reservations: {e}")
+            return
+
         now = datetime.now()
 
         active_reservations = []
@@ -59,8 +75,12 @@ class ReservationService:
 
             # Update the status in the database if it has changed
             if r["status"] != new_status:
-                logger.info(f"Updating reservation {r["reservation_id"]} status to {new_status}.")
-                self.db.update_reservation_status(r["reservation_id"], new_status)
+                try:
+                    logger.info(f"Updating reservation {r["reservation_id"]} status to {new_status}.")
+                    self.db.update_reservation_status(r["reservation_id"], new_status)
+                except Exception as e:
+                    discord.error(title="Update Reservation Error", description=str(e), fields=[{"name": "Reservation ID", "value": r["reservation_id"]}, {"name": "new status", "value": new_status}])
+                    logger.error(f"Error updating reservation with reservation ID {r["reservation_id"]} to status: {new_status}")
 
             # If the reservation is now active, add it to the list of active reservations
             if new_status == "active":
@@ -93,4 +113,5 @@ class ReservationService:
             logger.info("Closing database connection...")
             self.db.close()
         except Exception as e:
+            discord.error(title="Database Close Error", description=str(e))
             logger.error(f"Error closing database connection: {e}")
