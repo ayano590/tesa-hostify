@@ -1,9 +1,21 @@
 from datetime import datetime
-from config import DISCORD_WEBHOOK_URL
+from config import DISCORD_WEBHOOK_URL, HEALTHCHECKS_URL
 import httpx
 import logging
 
-logger = logging.getLogger("DiscordNotifier")
+logger = logging.getLogger("monitor")
+
+class Heartbeat:
+    def __init__(self):
+        self.url = HEALTHCHECKS_URL
+        self.client = httpx.Client(timeout=10)
+
+    def ping(self):
+        try:
+            response = self.client.get(self.url or "https://hc-ping.com/3de22dcd-bde0-4108-ab2d-83e11123e0b7")
+            response.raise_for_status()
+        except:
+            logger.error("Heartbeat failed")
 
 class DiscordNotifier:
     def __init__(self):

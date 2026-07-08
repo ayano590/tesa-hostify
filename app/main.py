@@ -6,11 +6,12 @@ from database import Database
 from reservation_service import ReservationService
 from scheduler import start_scheduler, stop_scheduler
 from logging_setup import setup_logging
-from monitoring import DiscordNotifier
+from monitoring import DiscordNotifier, Heartbeat
 
 setup_logging()
 logger = logging.getLogger("webhook")
 discord = DiscordNotifier()
+heartbeat = Heartbeat()
 
 discord.info(title="Server start", description="")
 
@@ -27,6 +28,7 @@ except Exception as e:
 
 # --- scheduler job wrapper ---
 def job():
+    heartbeat.ping()
     service.process_status_changes()
     service.delete_old_reservations()
 
