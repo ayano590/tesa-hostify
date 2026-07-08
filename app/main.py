@@ -12,6 +12,8 @@ setup_logging()
 logger = logging.getLogger("webhook")
 discord = DiscordNotifier()
 
+discord.info(title="Server start", description="")
+
 # --- init core components ---
 db = Database()
 service = ReservationService(db)
@@ -29,6 +31,7 @@ def job():
     service.delete_old_reservations()
 
 def shutdown():
+    discord.info(title="Server stop", description="")
     service.close()
 
 # --- FastAPI app with lifespan event ---
