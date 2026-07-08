@@ -9,7 +9,7 @@ from logging_setup import setup_logging
 from monitoring import DiscordNotifier, Heartbeat
 
 setup_logging()
-logger = logging.getLogger("webhook")
+logger = logging.getLogger("main")
 discord = DiscordNotifier()
 heartbeat = Heartbeat()
 
