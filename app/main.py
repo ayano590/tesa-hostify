@@ -27,7 +27,6 @@ def job():
 
 def shutdown():
     discord.info(title="Server stop", description="")
-    service.close()
 
 # --- FastAPI app with lifespan event ---
 @asynccontextmanager

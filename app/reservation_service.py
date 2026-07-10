@@ -79,14 +79,13 @@ class ReservationService:
                     logger.info(f"Updating reservation {r['reservation_id']} status to {new_status}.")
                     self.db.update_reservation_status(r["reservation_id"], new_status)
 
-                    r["status"] = "active"
-
                 except Exception as e:
                     discord.error(title="Update Reservation Error", description=str(e), fields=[{"name": "Reservation ID", "value": r["reservation_id"]}, {"name": "new status", "value": new_status}])
                     logger.error(f"Error updating reservation with reservation ID {r['reservation_id']} to status: {new_status}")
 
             # If the reservation is now active, add it to the list of active reservations
             if new_status == "active":
+                r["status"] = "active"
                 active_reservations.append(r)
 
         if active_reservations:
@@ -111,11 +110,3 @@ class ReservationService:
             return "completed"
         
         return r["status"]
-    
-    def close(self):
-        try:
-            logger.info("Closing database connection...")
-            self.db.close()
-        except Exception as e:
-            discord.error(title="Database Close Error", description=str(e))
-            logger.error(f"Error closing database connection: {e}")
