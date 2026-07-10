@@ -72,8 +72,8 @@ class Database:
                     data["guest_name"],
                     data["room_number"],
                     data["door_code"],
-                    data["checkIn"],
-                    data["checkOut"],
+                    data["check_in"],
+                    data["check_out"],
                     data["status"],
                 ))
 

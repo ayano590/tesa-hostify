@@ -37,8 +37,8 @@ class ReservationService:
             "guest_name": payload["data"]["guest"]["name"],
             "room_number": room_number,
             "door_code": door_code,
-            "checkIn": checkIn,
-            "checkOut": checkOut,
+            "check_in": checkIn,
+            "check_out": checkOut,
             "status": payload["data"]["reservation"]["status"]
         }
 
@@ -76,23 +76,27 @@ class ReservationService:
             # Update the status in the database if it has changed
             if r["status"] != new_status:
                 try:
-                    logger.info(f"Updating reservation {r["reservation_id"]} status to {new_status}.")
+                    logger.info(f"Updating reservation {r['reservation_id']} status to {new_status}.")
                     self.db.update_reservation_status(r["reservation_id"], new_status)
+
+                    r["status"] = "active"
+
                 except Exception as e:
                     discord.error(title="Update Reservation Error", description=str(e), fields=[{"name": "Reservation ID", "value": r["reservation_id"]}, {"name": "new status", "value": new_status}])
-                    logger.error(f"Error updating reservation with reservation ID {r["reservation_id"]} to status: {new_status}")
+                    logger.error(f"Error updating reservation with reservation ID {r['reservation_id']} to status: {new_status}")
 
             # If the reservation is now active, add it to the list of active reservations
             if new_status == "active":
                 active_reservations.append(r)
 
-        logger.info(f"Syncing {len(active_reservations)} active reservations to TESA and TTLock...")
-        sync_to_tesa(active_reservations)
-        sync_to_ttlock(active_reservations)
+        if active_reservations:
+            logger.info(f"Syncing {len(active_reservations)} active reservations to TESA and TTLock...")
+            sync_to_tesa(active_reservations)
+            sync_to_ttlock(active_reservations)
 
     def _compute_status(self, r, now):
-        checkIn = datetime.fromisoformat(r["checkIn"])
-        checkOut = datetime.fromisoformat(r["checkOut"])
+        checkIn = datetime.fromisoformat(r["check_in"])
+        checkOut = datetime.fromisoformat(r["check_out"])
 
         if r["status"] == "cancelled":
             return "cancelled"
