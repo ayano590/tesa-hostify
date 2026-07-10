@@ -19,13 +19,6 @@ discord.info(title="Server start", description="")
 db = Database()
 service = ReservationService(db)
 
-# --- init database ---
-try:
-    db.init_db()
-except Exception as e:
-    discord.error(title="Database Initialization Error", description=str(e))
-    logger.error(f"Error initializing database: {e}")
-
 # --- scheduler job wrapper ---
 def job():
     heartbeat.ping()
