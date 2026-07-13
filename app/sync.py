@@ -18,7 +18,7 @@ ROOM_TO_PIN = {
     }
 
 @retry(
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(10),
     wait=wait_exponential(multiplier=1, min=2, max=10),
     reraise=True
 )
@@ -68,7 +68,7 @@ def sync_to_tesa(active_reservations):
 
 
 @retry(
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(10),
     wait=wait_exponential(multiplier=1, min=2, max=10),
     reraise=True
 )
