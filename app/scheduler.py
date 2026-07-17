@@ -5,8 +5,9 @@ logger = logging.getLogger("scheduler")
 
 scheduler = BackgroundScheduler(job_defaults={"coalesce": True, "max_instances": 1})
 
-def start_scheduler(job_func):
-    scheduler.add_job(job_func, 'interval', minutes=5, id='status_job', replace_existing=True)
+def start_scheduler(status_func, maintenance_func):
+    scheduler.add_job(status_func, 'interval', minutes=5, id='status_job', replace_existing=True)
+    scheduler.add_job(maintenance_func, 'interval', hours=24, id='maintenance_job', replace_existing=True)
     scheduler.start()
     logger.info("Scheduler run started.")
 

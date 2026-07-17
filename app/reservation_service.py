@@ -110,3 +110,12 @@ class ReservationService:
             return "completed"
         
         return r["status"]
+    
+    def truncate_WAL(self):
+        try:
+            logger.info(f"Truncating WAL file...")
+            self.db.truncate_WAL()
+
+        except Exception as e:
+            discord.error(title="Truncate WAL Error", description=str(e))
+            logger.error("Error truncating WAL file")
