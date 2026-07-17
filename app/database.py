@@ -14,6 +14,7 @@ class Database:
 
         conn.execute("PRAGMA journal_mode=WAL;")
         conn.execute("PRAGMA foreign_keys=ON;")
+        conn.execute("PRAGMA wal_autocheckpoint=100;")
 
         return conn
 
