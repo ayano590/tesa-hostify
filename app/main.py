@@ -20,10 +20,14 @@ db = Database()
 service = ReservationService(db)
 
 # --- scheduler job wrapper ---
-def job():
+def status_job():
     heartbeat.ping()
     service.process_status_changes()
     service.delete_old_reservations()
+
+def maintenance_job():
+    service.delete_old_reservations()
+    service.truncate_WAL()
 
 def shutdown():
     discord.info(title="Server stop", description="")
@@ -31,7 +35,7 @@ def shutdown():
 # --- FastAPI app with lifespan event ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    start_scheduler(job)
+    start_scheduler(status_job, maintenance_job)
     yield
     stop_scheduler(shutdown)
 

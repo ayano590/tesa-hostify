@@ -12,15 +12,14 @@ class Database:
         conn = sqlite3.connect(DB_PATH, timeout=30, isolation_level="IMMEDIATE")
         conn.row_factory = sqlite3.Row
 
-        conn.execute("PRAGMA journal_mode=WAL;")
         conn.execute("PRAGMA foreign_keys=ON;")
-        conn.execute("PRAGMA wal_autocheckpoint=100;")
 
         return conn
 
     def init_db(self):
         try:
             with self._get_connection() as conn:
+                conn.execute("PRAGMA journal_mode=WAL;")
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS reservations (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -146,4 +145,14 @@ class Database:
         except sqlite3.Error as e:
             raise RuntimeError(
                 f"Failed to fetch reservation '{reservation_id}': {e}"
+            ) from e
+        
+    def truncate_WAL(self):
+        try:
+            with self._get_connection() as conn:
+                conn.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+
+        except sqlite3.Error as e:
+            raise RuntimeError(
+                f"Failed to truncate WAL: {e}"
             ) from e
