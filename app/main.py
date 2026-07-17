@@ -28,6 +28,10 @@ def maintenance_job():
     service.delete_old_reservations()
     service.truncate_WAL()
 
+def maintenance_job():
+    service.delete_old_reservations()
+    service.truncate_WAL()
+
 def shutdown():
     discord.info(title="Server stop", description="")
 
