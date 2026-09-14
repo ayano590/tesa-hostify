@@ -1,13 +1,23 @@
 from dotenv import load_dotenv
 import os
 
+
+def _get_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 load_dotenv()
 
 TESA_BASE_URL = os.getenv("TESA_BASE_URL")
 TESA_USERNAME = os.getenv("TESA_USERNAME")
 TESA_PASSWORD = os.getenv("TESA_PASSWORD")
+TESA_VERIFY_SSL = _get_bool("TESA_VERIFY_SSL", False)
 
 TTLOCK_BASE_URL = os.getenv("TTLOCK_BASE_URL")
+TTLOCK_VERIFY_SSL = _get_bool("TTLOCK_VERIFY_SSL", True)
 
 TTLOCK_CLIENT_ID = os.getenv("TTLOCK_CLIENT_ID")
 TTLOCK_CLIENT_SECRET = os.getenv("TTLOCK_CLIENT_SECRET")
