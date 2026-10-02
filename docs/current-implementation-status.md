@@ -26,65 +26,59 @@ The repository is in a working proof-of-concept / operational prototype stage. T
 
 ### Monitoring and housekeeping
 
-- Discord notifications are supported through `DiscordNotifier`.
-- Healthchecks can be pinged via `Heartbeat`.
+- Discord notifications report configuration/startup and scheduled reconciliation failures, provider sync/read-back failures, database maintenance failures, validated webhook queue failures, and health-check outage/recovery transitions.
+- Discord reports contain controlled summaries and affected room numbers only; they exclude door codes, guest names, reservation IDs, raw provider responses, raw exception messages, and webhook URLs. Discord delivery failures log only exception types or HTTP status codes.
+- Invalid/authentication-rejected requests, unsupported webhooks, successful reads, and ordinary success events are not sent to Discord, avoiding alert noise.
+- Healthchecks can be pinged via `Heartbeat`; Discord is notified on outage/recovery transitions rather than on each repeated failure.
 - Daily maintenance clears old reservations and truncates the SQLite WAL file.
 
 ## Gaps and risk areas
 
-### 1. Architecture is still event-driven, not reconciliation-driven
+### 1. Reconciliation is operationally useful, but still not fully provider-agnostic
 
-The current flow is close to: webhook -> upsert -> active reservation list -> sync. This makes it difficult to explicitly model:
+The service now computes desired access from reservations, stores it in `access_state`, and reads provider state into `actual_state`. TESA read-back uses `commonPins`; TTLock read-back queries paginated `listKeyboardPwd` results and matches the configured `keyboardPwdId`. Provider behaviour is still tuned to the current TTLock/TESA room mappings and room-specific credential patterns rather than a generalized credential catalog.
 
-- desired access state
-- synchronization state
-- failed retries
-- credential revocation
-- room moves and cancellations as separate desired-state transitions
+### 2. Request validation is much better, but not exhaustive
 
-### 2. Request validation is minimal
+The webhook endpoint now validates incoming payloads through Pydantic models, which closes the most obvious malformed-data failure modes. There is still no exhaustive schema validation for every Hostify vendor variant, so edge-case payloads can still fail in boundary conditions.
 
-The webhook endpoint accepts arbitrary JSON and only checks for a raw `action` value. There is no formal validation of required fields or data types, which means malformed payloads can fail deep in the service layer.
+### 3. Lifecycle state and source-status are still partially coupled
 
-### 3. Lifecycle state is derived, but not fully distinguished from PMS state
+Reservation rows keep both the upstream Hostify `source_status` and the middleware-derived `lifecycle_status`. This is intentional and useful for debugging, but it still means the persistence layer carries both vendor semantics and internal logic together in one table.
 
-Reservation status is recalculated based on dates, but external `status` values and internal lifecycle state are kept in the same field. That makes it harder to test deterministic transitions and to distinguish external PMS changes from middleware-derived transitions.
+### 4. TESA sync is still a full-map merge pattern
 
-### 4. TESA sync has a partial-update risk
+`sync_to_tesa()` still reads the current `commonPins` payload, merges the desired room mapping, and writes the merged map back. That is workable for this service, but it is still not a complete provider-agnostic reconciliation engine and should be treated as a room-specific sync layer rather than a universal access-state diff.
 
-The current code fetches the complete TESA pin set, merges in a partial map, and posts it back. This is workable for the current case but is not a robust desired-state reconciliation model and can accidentally overwrite unrelated slots if the mapping is not treated as a per-credential diff.
+### 5. Sync state is implemented, but recovery semantics are still relatively simple
 
-### 5. TTLock and TESA do not have explicit sync-state persistence
+The repo now persists `sync_state`, `desired_access_state`, and provider-read `actual_state` metadata, reports missing/stale/value mismatches, and treats per-room TTLock failures and read-back mismatches as reconciliation failures. Further recovery behavior after vendor outages and broader provider verification still need hardening.
 
-The project tracks whether a reservation is active, but not whether a door code was successfully synchronized, is pending, or failed. This makes recovery after restarts or failed vendor calls less deterministic.
+### 6. Revocation flow exists for room moves and stale entries, but it is still narrowly scoped
 
-### 6. No explicit credential removal flow
+The service now revokes or clears credentials when a reservation moves rooms and when a current desired access record becomes empty. Old-room revoke records remain persisted until provider sync and read-back succeed, so transient failures can be retried on later reconciliations. This is still a room-driven credential lifecycle rather than a full policy engine for every credential type.
 
-When a reservation becomes cancelled, completed, or moves to another room, the current code does not model an explicit `desired state` that can be reconciled to external systems. There is no clear removal or revocation path for stale credentials.
+### 7. Security and configuration posture remains an operational concern
 
-### 7. Security and configuration posture could be stricter
-
-- TESA HTTP client uses `verify=False` unconditionally.
-- There is no centralized validation for TLS settings or certificate pinning.
-- Secrets remain environment-based, which is good, but stronger configuration validation would reduce operational surprises.
+- TESA and TTLock HTTP clients still allow TLS verification to be disabled by configuration.
+- There is no central certificate pinning or mutual-TLS policy layer.
+- Required credentials, room IDs, endpoint URL syntax, and TLS boolean values are checked at startup. Secrets remain environment-based; stronger secret-management and certificate controls are still operational concerns.
 
 ## Current readiness
 
-The service is suitable for a controlled local or staging deployment with a small number of rooms and clear vendor API behavior, but it is not yet a fully robust access-control reconciliation engine. The repo already contains the foundation for a production-grade design, but the remaining architectural work is concentrated around:
+The service is now a working operational prototype with reconciliation-oriented state tracking. It is suitable for a controlled local or staging deployment with a narrow, well-understood room map and clear vendor API behavior. It is substantially stronger than the original event-driven prototype, but it is still not a full multi-tenant or fully generalized property-access reconciliation engine.
 
-- typed webhook models and payload validation
-- lifecycle/state separation
-- desired access state generation
-- explicit reconciliation and sync-state persistence
-- credential removal and idempotent recovery
-- tests and deterministic status transitions
+The remaining work is concentrated around:
+
+- hardening provider-specific reconciliation behavior
+- broadening payload validation for vendor edge cases
+- reducing reliance on room-specific assumptions
+- improving deterministic recovery after failed sync attempts
+- increasing operational safeguards around TLS and configuration
 
 ## Recommended follow-up tasks
 
-1. Add Pydantic request models for each Hostify action.
-2. Introduce explicit reservation lifecycle and desired-access state records.
-3. Build a central `reconcile()` operation that reads reservations and computes changes.
-4. Persist last sync attempts, successes, and errors in SQLite.
-5. Handle credential removal when a reservation expires or moves.
-6. Add tests for edge cases: reservation move, cancellation, overlaps, and duplicate webhook deliveries.
-7. Make certificate verification configurable for TESA clients.
+1. Expand webhook validation for all Hostify action variants and edge-case payloads.
+2. Add explicit retry and recovery tests for provider outages and delayed vendor consistency.
+3. Review TTLock response status semantics and TESA/TTLock room mapping assumptions against live vendor behaviour.
+4. Make TLS verification defaults and certificate controls explicit in operational runbooks.

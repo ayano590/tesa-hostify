@@ -7,6 +7,7 @@ This repository is a small Python service that bridges Hostify reservation event
 ## Top-level layout
 
 - `app/` — runtime Python modules for the service
+- `android-app/` — native Android client for the authenticated read-only API
 - `README.md` — project overview, setup steps, configuration, and usage
 - `ToDo.md` — current engineering checklist and roadmap
 - `requirements.txt` — Python runtime dependencies
@@ -32,20 +33,23 @@ This repository is a small Python service that bridges Hostify reservation event
 
 - Creates and maintains the SQLite metadata store.
 - Uses `hotel.db` plus `PRAGMA journal_mode=WAL` for write-ahead logging.
-- Stores basic reservation records with fields for reservation IDs, guest name, room number, door code, check-in/check-out, and status.
+- Stores reservation records plus `access_state` and `actual_state` tables for desired-state and provider-read state tracking.
+- Supports mismatch queries that surface missing, stale, or value-mismatched credentials.
 
 ### `app/reservation_service.py`
 
 - Handles reservation payload ingestion.
 - Parses Hostify event data into SQLite rows.
 - Recomputes reservation lifecycle state (`accepted`, `active`, `completed`, `cancelled`) from the current time and reservation dates.
-- Triggers synchronization when active reservations are found.
+- Generates provider-specific desired access records for TESA and TTLock.
+- Replaces access state and actual state for each reservation, including revoke semantics for room moves.
+- Triggers reconciliation through the sync layer when reservations require updates.
 
 ### `app/sync.py`
 
-- Implements the reconciliation-like sync layer.
+- Implements the provider sync layer used by the reconciliation flow.
 - Maps room numbers to TESA pin slots and TTLock room IDs.
-- Calls TESA and TTLock update functions for active reservations.
+- Calls TESA and TTLock update functions for active or revoked credentials.
 - Uses retry decorators for transient failures.
 
 ### `app/tesa_client.py`
@@ -62,8 +66,8 @@ This repository is a small Python service that bridges Hostify reservation event
 
 ### `app/monitoring.py`
 
-- Publishes Discord webhooks and health-check pings.
-- Centralizes alert/error reporting for service health and failed operations.
+- Publishes value-redacted Discord alerts and health-check pings.
+- Reports operational failures and health-check state transitions without sending door codes, guest names, reservation IDs, raw provider responses, or raw exception messages.
 
 ### `app/scheduler.py`
 
@@ -73,7 +77,7 @@ This repository is a small Python service that bridges Hostify reservation event
 
 ### `app/models.py`
 
-- Contains sample Hostify/TESA payload fixtures used for reference and testing support, not a formal runtime schema yet.
+- Defines Pydantic webhook payload models used to validate and normalize Hostify events at the HTTP boundary.
 
 ### `app/logging_setup.py`
 
@@ -94,8 +98,8 @@ This repository is a small Python service that bridges Hostify reservation event
 
 - The project is intentionally small and keeps SQLite as the persistence layer.
 - Room mappings are static and configured by environment variables.
-- Synchronization is oriented around active reservations only, with no distinct desired-access or sync-state model yet.
-- There is no formal request validation layer for inbound webhook payloads.
+- Synchronization is now driven by desired-access state plus sync metadata, even though the model is still tuned to the current TESA/TTLock room map.
+- Webhook payloads are validated through Pydantic models before processing.
 - The current implementation assumes specific Hostify payload shapes for `new_reservation`, `update_reservation`, and `move_reservation` events.
 
 ## Typical operational settings

@@ -5,6 +5,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 
+from models import HostifyWebhookPayload
 from reservation_service import ReservationService
 
 
@@ -12,6 +13,7 @@ class FakeDB:
     def __init__(self):
         self.reservations = {}
         self.access_states = {}
+        self.actual_state = {}
 
     def get_reservation(self, reservation_id):
         return self.reservations.get(reservation_id)
@@ -22,8 +24,11 @@ class FakeDB:
     def replace_access_state_for_reservation(self, reservation_id, records):
         self.access_states[reservation_id] = records
 
+    def list_access_state_for_reservation(self, reservation_id):
+        return self.access_states.get(reservation_id, [])
+
     def replace_actual_state_for_reservation(self, reservation_id, records):
-        self.access_states[reservation_id] = records
+        self.actual_state[reservation_id] = records
 
 
 class ReservationServiceLifecycleTests(unittest.TestCase):
@@ -74,8 +79,6 @@ class ReservationServiceLifecycleTests(unittest.TestCase):
             },
         }
         self.service.upsert_reservation(payload)
-        first_hash = self.db.reservations["abc"]["event_hash"]
-        self.db.reservations["abc"]["event_hash"] = first_hash
         self.service.upsert_reservation(payload)
         self.assertEqual(len(self.db.reservations), 1)
 
@@ -113,36 +116,30 @@ class ReservationServiceLifecycleTests(unittest.TestCase):
         self.assertTrue(room_6)
         self.assertTrue(any(r["room_number"] == "2" and r["should_exist"] is False for r in self.db.access_states["abc"]))
 
+    def test_payload_model_normalizes_action_and_reservation_id(self):
+        payload = HostifyWebhookPayload.model_validate({
+            "action": " Move_Reservation ",
+            "reservation_id": 123,
+            "data": {"reservation": {"status": "accepted"}},
+        })
+        self.assertEqual(payload.action, "move_reservation")
+        self.assertEqual(payload.reservation_id, "123")
+
+    def test_malformed_payload_missing_reservation_id_is_modelled_cleanly(self):
+        payload = HostifyWebhookPayload.model_validate({
+            "action": "new_reservation",
+            "data": {"reservation": {"status": "accepted"}},
+        })
+        self.assertEqual(payload.action, "new_reservation")
+        self.assertIsNone(payload.reservation_id)
+        self.assertTrue(payload.is_supported_reservation_action)
+
+    def test_unsupported_action_is_not_treated_as_reservation_event(self):
+        payload = HostifyWebhookPayload.model_validate({
+            "action": "listing_photo_processed",
+        })
+        self.assertFalse(payload.is_supported_reservation_action)
+
 
 if __name__ == "__main__":
     unittest.main()
-
-
-    def test_malformed_payload_is_rejected(self):
-        payload = {"action": "new_reservation", "data": {"reservation": {"status": "accepted"}}}
-        self.assertEqual(self.service._build_reservation_payload(payload)["reservation_id"], "")
-
-    def test_mismatch_detection_lists_missing_or_stale_state(self):
-        db = self.db
-        db.access_states["abc"] = [{
-            "room_number": "2",
-            "provider": "TTLOCK",
-            "credential_name": "room-2",
-            "desired_value": "1234",
-            "should_exist": True,
-        }]
-        db.actual_state = [{
-            "reservation_id": "abc",
-            "room_number": "2",
-            "provider": "TTLOCK",
-            "credential_name": "room-2",
-            "actual_value": "",
-        }]
-        mismatches = [{
-            "reservation_id": "abc",
-            "room_number": "2",
-            "provider": "TTLOCK",
-            "credential_name": "room-2",
-            "mismatch_type": "missing",
-        }]
-        self.assertTrue(mismatches[0]["reservation_id"] == "abc")

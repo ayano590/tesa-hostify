@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from pathlib import Path
 import sqlite3
+from datetime import date
 
 DB_PATH = Path(__file__).resolve().parent / "hotel.db"
 
@@ -10,11 +12,19 @@ class Database:
     def __init__(self):
         self.init_db()
 
+    @contextmanager
     def _get_connection(self):
         conn = sqlite3.connect(DB_PATH, timeout=30, isolation_level="IMMEDIATE")
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys=ON;")
-        return conn
+        try:
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA foreign_keys=ON;")
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def init_db(self):
         try:
@@ -246,6 +256,23 @@ class Database:
     def delete_old_reservations(self):
         try:
             with self._get_connection() as conn:
+                expired_reservations = """
+                    SELECT reservation_id
+                    FROM reservations
+                    WHERE check_out < datetime('now', '-30 days')
+                """
+                conn.execute(
+                    f"""
+                    DELETE FROM access_state
+                    WHERE reservation_id IN ({expired_reservations})
+                    """
+                )
+                conn.execute(
+                    f"""
+                    DELETE FROM actual_state
+                    WHERE reservation_id IN ({expired_reservations})
+                    """
+                )
                 conn.execute(
                     """
                     DELETE FROM reservations
@@ -268,6 +295,23 @@ class Database:
                 return [dict(row) for row in rows]
         except sqlite3.Error as e:
             raise RuntimeError(f"Failed to list reservations: {e}") from e
+
+    def list_reservations_checking_out_on_or_after(self, first_checkout_date: date):
+        try:
+            with self._get_connection() as conn:
+                rows = conn.execute(
+                    """
+                    SELECT reservation_id, room_number, check_in, check_out,
+                           lifecycle_status, door_code
+                    FROM reservations
+                    WHERE date(check_out) >= ?
+                    ORDER BY date(check_in), reservation_id
+                    """,
+                    (first_checkout_date.isoformat(),),
+                ).fetchall()
+                return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            raise RuntimeError(f"Failed to list upcoming reservations: {e}") from e
 
     def get_reservation(self, reservation_id: str):
         try:
@@ -360,6 +404,24 @@ class Database:
         except sqlite3.Error as e:
             raise RuntimeError(f"Failed to list access state: {e}") from e
 
+    def list_access_state_for_reservation(self, reservation_id: str):
+        try:
+            with self._get_connection() as conn:
+                rows = conn.execute(
+                    """
+                    SELECT *
+                    FROM access_state
+                    WHERE reservation_id = ?
+                    ORDER BY provider, room_number
+                    """,
+                    (reservation_id,),
+                ).fetchall()
+                return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            raise RuntimeError(
+                f"Failed to list access state for '{reservation_id}': {e}"
+            ) from e
+
     def replace_actual_state_for_reservation(self, reservation_id: str, records):
         try:
             with self._get_connection() as conn:
@@ -395,6 +457,45 @@ class Database:
                 )
         except sqlite3.Error as e:
             raise RuntimeError(f"Failed to replace actual state for '{reservation_id}': {e}") from e
+
+    def upsert_actual_state_for_reservation(self, reservation_id: str, records):
+        try:
+            with self._get_connection() as conn:
+                conn.executemany(
+                    """
+                    INSERT INTO actual_state (
+                        reservation_id,
+                        room_number,
+                        provider,
+                        credential_name,
+                        actual_value,
+                        sync_state,
+                        last_attempted_at,
+                        last_success_at,
+                        last_error,
+                        created_at,
+                        updated_at
+                    ) VALUES (?, ?, ?, ?, ?, 'verified', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL,
+                              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT(reservation_id, room_number, provider, credential_name)
+                    DO UPDATE SET
+                        actual_value = excluded.actual_value,
+                        sync_state = 'verified',
+                        last_attempted_at = CURRENT_TIMESTAMP,
+                        last_success_at = CURRENT_TIMESTAMP,
+                        last_error = NULL,
+                        updated_at = CURRENT_TIMESTAMP
+                    """,
+                    [(
+                        reservation_id,
+                        record.get("room_number"),
+                        record.get("provider"),
+                        record.get("credential_name"),
+                        record.get("actual_value"),
+                    ) for record in records],
+                )
+        except sqlite3.Error as e:
+            raise RuntimeError(f"Failed to update actual state for '{reservation_id}': {e}") from e
 
     def list_actual_state(self):
         try:
@@ -451,7 +552,18 @@ class Database:
                      AND a.room_number = b.room_number
                      AND a.provider = b.provider
                      AND a.credential_name = b.credential_name
-                    WHERE a.should_exist = 1 OR (a.should_exist = 0 AND b.actual_value IS NOT NULL AND b.actual_value != '')
+                    WHERE (
+                        a.should_exist = 1
+                        AND (
+                            b.actual_value IS NULL
+                            OR b.actual_value = ''
+                            OR (a.desired_value IS NOT NULL AND a.desired_value != b.actual_value)
+                        )
+                    ) OR (
+                        a.should_exist = 0
+                        AND b.actual_value IS NOT NULL
+                        AND b.actual_value != ''
+                    )
                     ORDER BY a.reservation_id, a.provider, a.room_number
                     """
                 ).fetchall()

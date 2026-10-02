@@ -79,5 +79,56 @@ class TTLockClient:
         response.raise_for_status()
         return response.json()
 
+    def get_door_code(self, access_token, room_number):
+        lock_id, pwd_id = self._resolve_room_ids(room_number)
+        if not lock_id or not pwd_id:
+            raise ValueError(f"TTLock lock/password IDs are not configured for room {room_number}")
+
+        page_no = 1
+        page_size = 100
+
+        while True:
+            response = self.client.post(
+                "/v3/lock/listKeyboardPwd",
+                data={
+                    "clientId": TTLOCK_CLIENT_ID,
+                    "accessToken": access_token,
+                    "lockId": lock_id,
+                    "pageNo": page_no,
+                    "pageSize": page_size,
+                    "orderBy": "0",
+                    "date": time.time_ns() // 1_000_000,
+                },
+            )
+            response.raise_for_status()
+            result = response.json()
+            if not isinstance(result, dict):
+                raise ValueError("TTLock keyboard-password response must be an object")
+
+            credentials = result.get("list")
+            if not isinstance(credentials, list):
+                raise ValueError("TTLock keyboard-password response is missing a valid list")
+
+            for credential in credentials:
+                if not isinstance(credential, dict):
+                    raise ValueError("TTLock keyboard-password list contains an invalid entry")
+                if str(credential.get("keyboardPwdId")) == str(pwd_id):
+                    if "keyboardPwd" not in credential or credential["keyboardPwd"] is None:
+                        raise ValueError(
+                            "TTLock keyboard-password response is missing "
+                            f"keyboardPwd for configured password ID {pwd_id}"
+                        )
+                    return credential["keyboardPwd"]
+
+            try:
+                total_pages = int(result["pages"])
+            except (KeyError, TypeError, ValueError) as e:
+                raise ValueError("TTLock keyboard-password response is missing a valid pages count") from e
+            if total_pages < 1:
+                raise ValueError("TTLock keyboard-password response has an invalid pages count")
+            if page_no >= total_pages:
+                return None
+            page_no += 1
+
     def close(self):
         self.client.close()

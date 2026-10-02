@@ -65,9 +65,35 @@ class HostifyWebhookPayload(BaseModel):
     planned_departure: Optional[str] = None
     status_code: Optional[str] = None
 
+    @field_validator("action", mode="before")
+    @classmethod
+    def normalize_action(cls, value: Any) -> Optional[str]:
+        if value is None:
+            return None
+        value = str(value).strip()
+        return value.lower() if value else None
+
+    @field_validator("reservation_id", mode="before")
+    @classmethod
+    def normalize_reservation_id(cls, value: Any) -> Optional[str]:
+        if value in (None, "", "None"):
+            return None
+        if isinstance(value, str):
+            value = value.strip()
+            return value or None
+        return str(value).strip() or None
+
     @property
     def reservation_data(self) -> Dict[str, Any]:
         return self.data.model_dump(exclude_none=True) if self.data else {}
+
+    @property
+    def is_supported_reservation_action(self) -> bool:
+        return (self.action or "").lower() in {
+            "new_reservation",
+            "update_reservation",
+            "move_reservation",
+        }
 
 
 class DesiredAccessRecord(BaseModel):

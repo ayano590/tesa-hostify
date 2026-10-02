@@ -114,6 +114,11 @@ class ReservationService:
                 return
 
             previous_room = existing.get("room_number") if existing else None
+            previous_access = (
+                self.db.list_access_state_for_reservation(reservation_id)
+                if existing and previous_room != room_number
+                else []
+            )
             logger.info("Upsert reservation %s status=%s", reservation_id, normalized["source_status"])
             self.db.upsert_reservation(normalized)
 
@@ -126,27 +131,37 @@ class ReservationService:
                     "lifecycle_status": "cancelled",
                     "source_status": "room_moved",
                 }, include_missing=True)
-                self.db.replace_access_state_for_reservation(reservation_id, access_records + revoke_records)
+                access_records = self._with_pending_revocations(
+                    access_records + revoke_records,
+                    previous_access,
+                )
+                self.db.replace_access_state_for_reservation(reservation_id, access_records)
             else:
                 self.db.replace_access_state_for_reservation(reservation_id, access_records)
-        except Exception as e:
+        except Exception as error:
             discord.error(
                 title="Reservation Upsert Error",
-                description=str(e),
+                description="Reservation data could not be saved. Check application logs.",
                 fields=[
-                    {"name": "Reservation ID", "value": reservation_id},
-                    {"name": "Room Number", "value": room_number or "unknown"},
+                    {
+                        "name": "Room",
+                        "value": room_number if room_number in ROOM_TO_PIN else "unknown",
+                    },
+                    {"name": "Error Type", "value": type(error).__name__},
                 ],
             )
-            logger.error(f"Error upserting reservation: {e}")
+            logger.error("Error upserting reservation (%s).", type(error).__name__)
 
     def delete_old_reservations(self):
         try:
             logger.info("Deleting old reservations...")
             self.db.delete_old_reservations()
-        except Exception as e:
-            discord.error(title="Delete Old Reservations Error", description=str(e))
-            logger.error(f"Error deleting old reservations: {e}")
+        except Exception as error:
+            discord.error(
+                title="Reservation cleanup failed",
+                description="Expired reservation data could not be removed. Check application logs.",
+            )
+            logger.error("Error deleting old reservations (%s).", type(error).__name__)
 
     def _build_access_records(self, reservation, include_missing=False):
         room_number = str(reservation.get("room_number") or "")
@@ -194,16 +209,42 @@ class ReservationService:
     def _desired_access_for_reservation(self, reservation):
         return self._build_access_records(reservation, include_missing=False)
 
+    def _access_record_key(self, record):
+        return (
+            str(record.get("room_number") or ""),
+            record.get("provider"),
+            record.get("credential_name"),
+        )
+
+    def _with_pending_revocations(self, desired, persisted):
+        desired_keys = {self._access_record_key(record) for record in desired}
+        merged = list(desired)
+        for record in persisted:
+            if not record.get("should_exist") and self._access_record_key(record) not in desired_keys:
+                merged.append({
+                    "room_number": record.get("room_number"),
+                    "provider": record.get("provider"),
+                    "credential_name": record.get("credential_name"),
+                    "desired_value": record.get("desired_value") or "",
+                    "should_exist": False,
+                    "reason": record.get("reason") or "pending revoke",
+                })
+        return merged
+
     def reconcile(self):
         try:
             reservations = self.db.list_all_reservations()
-        except Exception as e:
-            discord.error(title="List All Reservations Error", description=str(e))
-            logger.error(f"Error listing all reservations: {e}")
+        except Exception as error:
+            discord.error(
+                title="Reconciliation could not list reservations",
+                description="The reservation list could not be read from the database.",
+            )
+            logger.error("Error listing all reservations (%s).", type(error).__name__)
             return
 
         now = datetime.now()
         desired_access = []
+        desired_by_reservation = {}
 
         for reservation in reservations:
             lifecycle = self._compute_status(reservation, now)
@@ -211,10 +252,21 @@ class ReservationService:
                 self.db.update_lifecycle_status(reservation["reservation_id"], lifecycle)
                 reservation["lifecycle_status"] = lifecycle
 
-            desired_access.extend(self._build_access_records({**reservation, "lifecycle_status": lifecycle}))
+            current_desired = self._build_access_records(
+                {**reservation, "lifecycle_status": lifecycle}
+            )
+            persisted_access = self.db.list_access_state_for_reservation(
+                reservation["reservation_id"]
+            )
+            desired = self._with_pending_revocations(current_desired, persisted_access)
+            desired_by_reservation[reservation["reservation_id"]] = {
+                "current": current_desired,
+                "reconcile": desired,
+            }
+            desired_access.extend(desired)
             self.db.replace_access_state_for_reservation(
                 reservation["reservation_id"],
-                self._build_access_records({**reservation, "lifecycle_status": lifecycle}),
+                desired,
             )
 
         if not desired_access:
@@ -224,59 +276,114 @@ class ReservationService:
         logger.info(f"Reconciling {len(desired_access)} desired access entries.")
         sync_result_tesa = sync_to_tesa(desired_access)
         sync_result_ttlock = sync_to_ttlock(desired_access)
+        provider_results = {
+            "TESA": sync_result_tesa,
+            "TTLOCK": sync_result_ttlock,
+        }
 
         for reservation in reservations:
-            desired = self._desired_access_for_reservation({**reservation, "lifecycle_status": reservation.get("lifecycle_status")})
+            desired_state = desired_by_reservation[reservation["reservation_id"]]
+            desired = desired_state["reconcile"]
             if not desired:
                 continue
             state = "succeeded" if any(item.get("should_exist") for item in desired) or any(item.get("desired_value") == "" for item in desired) else "unknown"
-            provider = "TESA" if any(item.get("provider") == "TESA" for item in desired) else "TTLOCK"
-            self.db.replace_actual_state_for_reservation(
-                reservation["reservation_id"],
-                [{
+            providers = {item.get("provider") for item in desired}
+            observed_by_key = {
+                (
+                    item.get("provider"),
+                    str(item.get("room_number", "")),
+                    item.get("credential_name"),
+                ): item.get("actual_value")
+                for provider in providers
+                for item in provider_results.get(provider, {}).get("actual_state", [])
+            }
+            actual_records = [
+                {
                     "room_number": item.get("room_number"),
                     "provider": item.get("provider"),
                     "credential_name": item.get("credential_name"),
-                    "desired_value": item.get("desired_value"),
-                } for item in desired],
+                    "actual_value": observed_by_key[
+                        (
+                            item.get("provider"),
+                            str(item.get("room_number", "")),
+                            item.get("credential_name"),
+                        )
+                    ],
+                }
+                for item in desired
+                if (
+                    item.get("provider"),
+                    str(item.get("room_number", "")),
+                    item.get("credential_name"),
+                ) in observed_by_key
+            ]
+            self.db.upsert_actual_state_for_reservation(
+                reservation["reservation_id"],
+                actual_records,
             )
+            failed_providers = [
+                provider
+                for provider in providers
+                if provider_results.get(provider, {}).get("status") == "error"
+                and (
+                    not provider_results.get(provider, {}).get("failed_rooms")
+                    or any(
+                        str(item.get("room_number", "")) in provider_results[provider]["failed_rooms"]
+                        for item in desired
+                        if item.get("provider") == provider
+                    )
+                )
+            ]
             mismatches = self.db.list_mismatches()
             if mismatches:
-                logger.warning("Detected reconciliation mismatches: %s", mismatches)
-            if sync_result_tesa.get("status") == "error" or sync_result_ttlock.get("status") == "error":
+                mismatch_types = sorted({item["mismatch_type"] for item in mismatches})
+                logger.warning(
+                    "Detected %d reconciliation mismatches (%s).",
+                    len(mismatches),
+                    ", ".join(mismatch_types),
+                )
+            if failed_providers:
+                provider = ",".join(sorted(failed_providers))
                 self.db.mark_sync_failed(
                     reservation["reservation_id"],
                     provider=provider,
-                    error="reconciliation failed for TESA/TTLock sync",
+                    error=f"reconciliation failed for {provider} sync",
                 )
                 self.db.update_sync_state(
                     reservation["reservation_id"],
                     "failed",
                     provider=provider,
                     desired_access_state=json.dumps(desired, sort_keys=True),
-                    error="reconciliation failed for TESA/TTLock sync",
+                    error=f"reconciliation failed for {provider} sync",
                 )
                 continue
             self.db.mark_sync_success(
                 reservation["reservation_id"],
-                provider=provider,
+                provider=",".join(sorted(providers)),
                 desired_access_state=json.dumps(desired, sort_keys=True),
             )
             self.db.update_sync_state(
                 reservation["reservation_id"],
                 state,
-                provider=provider,
+                provider=",".join(sorted(providers)),
                 desired_access_state=json.dumps(desired, sort_keys=True),
                 error=None,
+            )
+            self.db.replace_access_state_for_reservation(
+                reservation["reservation_id"],
+                desired_state["current"],
             )
 
     def process_status_changes(self):
         try:
             logger.info("Processing reservation status changes...")
             reservations = self.db.list_all_reservations()
-        except Exception as e:
-            discord.error(title="List All Reservations Error", description=str(e))
-            logger.error(f"Error listing all reservations: {e}")
+        except Exception as error:
+            discord.error(
+                title="Reservation status update failed",
+                description="Reservation lifecycle statuses could not be recalculated.",
+            )
+            logger.error("Error listing reservations for status update (%s).", type(error).__name__)
             return
 
         now = datetime.now()
@@ -316,6 +423,9 @@ class ReservationService:
         try:
             logger.info("Truncating WAL file...")
             self.db.truncate_WAL()
-        except Exception as e:
-            discord.error(title="Truncate WAL Error", description=str(e))
-            logger.error("Error truncating WAL file")
+        except Exception as error:
+            discord.error(
+                title="Database maintenance failed",
+                description="The SQLite write-ahead log could not be checkpointed.",
+            )
+            logger.error("Error truncating WAL file (%s).", type(error).__name__)
