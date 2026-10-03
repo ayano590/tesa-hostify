@@ -1,11 +1,14 @@
 import os
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-import config
+from app import config
 
 
 class ConfigValidationTests(unittest.TestCase):
