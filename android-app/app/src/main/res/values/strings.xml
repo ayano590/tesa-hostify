@@ -21,5 +21,6 @@
     <string name="status_reservations">Reservations checking out today or later</string>
     <string name="status_request_failed">Request failed. Check the server and try again.</string>
     <string name="no_locks_returned">No door locks were returned.</string>
+    <string name="lock_provider_read_failed">Could not read door codes from %1$s%2$s.</string>
     <string name="no_reservations_found">No reservations found for today or later.</string>
 </resources>

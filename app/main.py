@@ -101,7 +101,7 @@ async def require_read_access(
 @router.get("/api/locks", dependencies=[Depends(require_read_access)])
 def get_locks():
     try:
-        return {"locks": read_current_lock_codes()}
+        return read_current_lock_codes()
     except Exception as e:
         logger.error("Failed to read current lock codes: %s", type(e).__name__)
         raise HTTPException(

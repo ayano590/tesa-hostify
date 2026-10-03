@@ -1,6 +1,5 @@
 import logging
 import time
-from contextlib import ExitStack
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -23,40 +22,77 @@ def normalize_pin_value(value):
 
 
 def read_current_lock_codes():
-    with ExitStack() as stack:
-        tesa = TESAClient()
-        stack.callback(tesa.close)
-        ttlock = TTLockClient()
-        stack.callback(ttlock.close)
+    lock_codes = []
+    provider_errors = []
 
+    tesa = None
+    try:
+        tesa = TESAClient()
         tesa.login()
         tesa_response = tesa.get_common_pins()
         if not isinstance(tesa_response, dict) or not isinstance(tesa_response.get("commonPinsInfo"), dict):
             raise ValueError("TESA common-pin response is missing commonPinsInfo")
         common_pins = tesa_response["commonPinsInfo"]
-
-        lock_codes = [
+        lock_codes.extend(
             {
                 "room_number": room_number,
                 "provider": "TESA",
                 "door_code": normalize_pin_value(common_pins.get(pin_name)),
             }
             for room_number, pin_name in ROOM_TO_PIN.items()
-        ]
-
-        access_token = ttlock.get_access_token()
-        lock_codes.extend(
-            {
-                "room_number": room_number,
-                "provider": "TTLOCK",
-                "door_code": normalize_pin_value(
-                    ttlock.get_door_code(access_token, room_number)
-                ),
-            }
-            for room_number in ("2", "6")
         )
+    except Exception as error:
+        logger.error("Failed to read current lock codes from TESA (%s).", type(error).__name__)
+        provider_errors.append({
+            "provider": "TESA",
+            "error_type": type(error).__name__,
+        })
+    finally:
+        if tesa is not None:
+            try:
+                tesa.close()
+            except Exception as error:
+                logger.warning("Error occurred while closing TESA client (%s).", type(error).__name__)
 
-        return lock_codes
+    ttlock = None
+    try:
+        ttlock = TTLockClient()
+        access_token = ttlock.get_access_token()
+        if not access_token:
+            raise ValueError("TTLock access token is missing")
+        for room_number in ("2", "6"):
+            try:
+                door_code = ttlock.get_door_code(access_token, room_number)
+                lock_codes.append({
+                    "room_number": room_number,
+                    "provider": "TTLOCK",
+                    "door_code": normalize_pin_value(door_code),
+                })
+            except Exception as error:
+                logger.error(
+                    "Failed to read current TTLock code for room %s (%s).",
+                    room_number,
+                    type(error).__name__,
+                )
+                provider_errors.append({
+                    "provider": "TTLOCK",
+                    "room_number": room_number,
+                    "error_type": type(error).__name__,
+                })
+    except Exception as error:
+        logger.error("Failed to read current lock codes from TTLock (%s).", type(error).__name__)
+        provider_errors.append({
+            "provider": "TTLOCK",
+            "error_type": type(error).__name__,
+        })
+    finally:
+        if ttlock is not None:
+            try:
+                ttlock.close()
+            except Exception as error:
+                logger.warning("Error occurred while closing TTLock client (%s).", type(error).__name__)
+
+    return {"locks": lock_codes, "provider_errors": provider_errors}
 
 
 @retry(

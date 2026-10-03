@@ -151,12 +151,27 @@ class ReadOnlyAPIHTTPTests(unittest.TestCase):
             {"room_number": "2", "provider": "TESA", "door_code": "1234"},
             {"room_number": "2", "provider": "TTLOCK", "door_code": "5678"},
         ]
-        with patch.object(main, "read_current_lock_codes", return_value=locks):
+        with patch.object(
+            main,
+            "read_current_lock_codes",
+            return_value={"locks": locks, "provider_errors": []},
+        ):
             response = self.client.get("/api/locks", headers=self._authorized_headers())
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"locks": locks})
+        self.assertEqual(response.json(), {"locks": locks, "provider_errors": []})
         self.assertEqual(response.headers["cache-control"], "no-store")
+
+    def test_locks_endpoint_returns_available_codes_with_provider_errors(self):
+        partial_result = {
+            "locks": [{"room_number": "2", "provider": "TTLOCK", "door_code": "5678"}],
+            "provider_errors": [{"provider": "TESA", "error_type": "ValueError"}],
+        }
+        with patch.object(main, "read_current_lock_codes", return_value=partial_result):
+            response = self.client.get("/api/locks", headers=self._authorized_headers())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), partial_result)
 
     def test_locks_endpoint_does_not_expose_provider_exception(self):
         with patch.object(

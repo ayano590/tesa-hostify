@@ -99,7 +99,7 @@ Endpoints
 
 The two GET endpoints require `Authorization: Bearer <READ_API_TOKEN>`. The token is shared by authorized clients rather than tied to a sender identity. Do not put it in the URL; expose these endpoints only over HTTPS and share the token with the Android app through a secure channel.
 
-Responses are JSON objects with `locks` or `reservations` arrays. Each lock entry contains `room_number`, `provider`, and `door_code` (room 2/6 may appear once per provider). Each reservation contains `reservation_id`, `room_number`, `check_in`, `check_out`, `lifecycle_status`, and `door_code`.
+Responses are JSON objects with `locks` or `reservations` arrays. Each lock entry contains `room_number`, `provider`, and `door_code` (room 2/6 may appear once per provider). `/api/locks` can also include `provider_errors` when a provider or individual room could not be read; codes from available providers are still returned, and the Android app displays a warning for unavailable results. Each reservation contains `reservation_id`, `room_number`, `check_in`, `check_out`, `lifecycle_status`, and `door_code`.
 
 Android app
 -----------

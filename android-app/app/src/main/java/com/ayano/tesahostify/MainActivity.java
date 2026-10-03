@@ -189,6 +189,7 @@ public final class MainActivity extends Activity {
                     setBusy(false);
                     setStatus(getString(locks ? R.string.status_current_locks : R.string.status_reservations));
                     if (locks) {
+                        showLockErrors(response.optJSONArray("provider_errors"));
                         showLocks(response.optJSONArray("locks"));
                     } else {
                         showReservations(response.optJSONArray("reservations"));
@@ -240,6 +241,21 @@ public final class MainActivity extends Activity {
             output.write(buffer, 0, count);
         }
         return output.toByteArray();
+    }
+
+    private void showLockErrors(JSONArray errors) {
+        if (errors == null) {
+            return;
+        }
+        for (int i = 0; i < errors.length(); i++) {
+            JSONObject error = errors.optJSONObject(i);
+            if (error != null) {
+                String provider = error.optString("provider", "provider");
+                String roomNumber = error.optString("room_number", "");
+                String roomSuffix = roomNumber.isEmpty() ? "" : " for room " + roomNumber;
+                addResultLine(getString(R.string.lock_provider_read_failed, provider, roomSuffix));
+            }
+        }
     }
 
     private void showLocks(JSONArray locks) {

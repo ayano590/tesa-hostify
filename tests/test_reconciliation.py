@@ -150,10 +150,10 @@ class ReconciliationIntegrationTests(unittest.TestCase):
         FakeTESAClient.initial_pins = {"pin2": "tesa-code"}
         FakeTTLockClient.credentials = {"2": "ttlock-code", "6": "another-code"}
 
-        lock_codes = sync.read_current_lock_codes()
+        result = sync.read_current_lock_codes()
 
         self.assertEqual(
-            {(item["room_number"], item["provider"], item["door_code"]) for item in lock_codes},
+            {(item["room_number"], item["provider"], item["door_code"]) for item in result["locks"]},
             {
                 ("1", "TESA", "tesa-code"),
                 ("2", "TESA", ""),
@@ -165,6 +165,43 @@ class ReconciliationIntegrationTests(unittest.TestCase):
                 ("6", "TTLOCK", "another-code"),
             },
         )
+        self.assertEqual(result["provider_errors"], [])
+
+    def test_read_current_lock_codes_returns_available_codes_when_tesa_fails(self):
+        FakeTTLockClient.credentials = {"2": "ttlock-code", "6": "another-code"}
+        with patch.object(FakeTESAClient, "get_common_pins", side_effect=ValueError("unexpected response")):
+            result = sync.read_current_lock_codes()
+
+        self.assertEqual(
+            {(item["room_number"], item["provider"], item["door_code"]) for item in result["locks"]},
+            {
+                ("2", "TTLOCK", "ttlock-code"),
+                ("6", "TTLOCK", "another-code"),
+            },
+        )
+        self.assertEqual(result["provider_errors"], [{
+            "provider": "TESA",
+            "error_type": "ValueError",
+        }])
+
+    def test_read_current_lock_codes_returns_other_rooms_when_one_ttlock_room_fails(self):
+        FakeTTLockClient.credentials = {"2": "ttlock-code", "6": "another-code"}
+        with patch.object(FakeTTLockClient, "get_door_code", side_effect=["ttlock-code", ValueError("unexpected response")]):
+            result = sync.read_current_lock_codes()
+
+        self.assertIn(
+            ("2", "TTLOCK", "ttlock-code"),
+            {(item["room_number"], item["provider"], item["door_code"]) for item in result["locks"]},
+        )
+        self.assertNotIn(
+            "6",
+            {item["room_number"] for item in result["locks"] if item["provider"] == "TTLOCK"},
+        )
+        self.assertEqual(result["provider_errors"], [{
+            "provider": "TTLOCK",
+            "room_number": "6",
+            "error_type": "ValueError",
+        }])
 
     def test_reconcile_clears_tesa_and_revokes_ttlock_for_cancelled_reservation(self):
         FakeTESAClient.initial_pins = {"pin6": "old-code"}
