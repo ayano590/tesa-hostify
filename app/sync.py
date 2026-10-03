@@ -4,9 +4,9 @@ from contextlib import ExitStack
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from monitoring import DiscordNotifier
-from tesa_client import TESAClient
-from ttlock_client import TTLockClient
+from app.monitoring import DiscordNotifier
+from app.tesa_client import TESAClient
+from app.ttlock_client import TTLockClient
 
 logger = logging.getLogger("sync")
 discord = DiscordNotifier()

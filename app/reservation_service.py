@@ -3,8 +3,8 @@ import json
 import logging
 from datetime import datetime, timedelta
 
-from monitoring import DiscordNotifier
-from sync import sync_to_tesa, sync_to_ttlock
+from app.monitoring import DiscordNotifier
+from app.sync import sync_to_tesa, sync_to_ttlock
 
 logger = logging.getLogger("reservation")
 discord = DiscordNotifier()

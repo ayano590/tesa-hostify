@@ -11,14 +11,14 @@ from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, HTTPException,
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import ValidationError
 
-from database import Database
-from logging_setup import setup_logging
-from monitoring import DiscordNotifier, Heartbeat
-from reservation_service import ReservationService
-from scheduler import start_scheduler, stop_scheduler
-from models import HostifyWebhookPayload
-from config import READ_API_TOKEN, validate_config
-from sync import read_current_lock_codes
+from app.database import Database
+from app.logging_setup import setup_logging
+from app.monitoring import DiscordNotifier, Heartbeat
+from app.reservation_service import ReservationService
+from app.scheduler import start_scheduler, stop_scheduler
+from app.models import HostifyWebhookPayload
+from app.config import READ_API_TOKEN, validate_config
+from app.sync import read_current_lock_codes
 
 setup_logging()
 logger = logging.getLogger("main")

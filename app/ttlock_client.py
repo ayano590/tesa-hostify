@@ -2,7 +2,7 @@ import time
 
 import httpx
 
-from config import (
+from app.config import (
     TTLOCK_BASE_URL,
     TTLOCK_CLIENT_ID,
     TTLOCK_CLIENT_SECRET,
