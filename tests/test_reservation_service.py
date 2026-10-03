@@ -1,12 +1,14 @@
-import os
 import sys
 import unittest
 from datetime import datetime
+from pathlib import Path
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-from models import HostifyWebhookPayload
-from reservation_service import ReservationService
+from app.models import HostifyWebhookPayload
+from app.reservation_service import ReservationService
 
 
 class FakeDB:
