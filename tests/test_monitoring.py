@@ -7,7 +7,7 @@ import httpx
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 
-from monitoring import DiscordNotifier, Heartbeat
+from app.monitoring import DiscordNotifier, Heartbeat
 
 
 class MonitoringTests(unittest.TestCase):

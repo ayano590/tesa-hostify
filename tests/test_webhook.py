@@ -9,9 +9,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-import database
-import logging_setup
-import monitoring
+from app import database
+from app import logging_setup
+from app import monitoring
 
 
 class FakeDatabase:
@@ -34,7 +34,7 @@ with (
     patch.object(monitoring, "DiscordNotifier", FakeNotifier),
     patch.object(logging_setup, "setup_logging"),
 ):
-    import main
+    from app import main
 
 
 class HostifyWebhookHTTPTests(unittest.TestCase):

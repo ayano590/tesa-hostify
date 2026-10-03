@@ -5,8 +5,8 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 
-from models import HostifyWebhookPayload
-from reservation_service import ReservationService
+from app.models import HostifyWebhookPayload
+from app.reservation_service import ReservationService
 
 
 class FakeDB:

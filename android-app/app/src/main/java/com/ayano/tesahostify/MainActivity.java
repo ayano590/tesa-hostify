@@ -47,11 +47,11 @@ public final class MainActivity extends Activity {
             currentToken = tokenStore.load();
         } catch (GeneralSecurityException e) {
             currentToken = null;
-            setStatus("Saved token could not be unlocked. Enter it again and save.");
+            setStatus(getString(R.string.status_token_unlocked_failed));
         }
         tokenInput.setHint(currentToken == null
-                ? "Paste the shared API token"
-                : "Token saved securely; enter a new token to replace it");
+                ? getString(R.string.hint_token_empty)
+                : getString(R.string.hint_token_saved));
     }
 
     private void buildHomeScreen() {
@@ -62,45 +62,45 @@ public final class MainActivity extends Activity {
         scrollView.addView(page);
 
         TextView title = new TextView(this);
-        title.setText("Hostify Access");
+        title.setText(R.string.title_home);
         title.setTextSize(28);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         page.addView(title, matchWrap());
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("View current door codes and upcoming reservations.");
+        subtitle.setText(R.string.subtitle_home);
         subtitle.setTextSize(16);
         subtitle.setPadding(0, dp(6), 0, dp(18));
         page.addView(subtitle, matchWrap());
 
-        addLabel(page, "Server address (HTTPS)");
+        addLabel(page, getString(R.string.label_server_address));
         baseUrlInput = new EditText(this);
         baseUrlInput.setSingleLine(true);
         baseUrlInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-        baseUrlInput.setHint("https://your-server.example.com");
+        baseUrlInput.setHint(R.string.hint_server_address);
         page.addView(baseUrlInput, matchWrap());
 
-        addLabel(page, "Shared API token");
+        addLabel(page, getString(R.string.label_api_token));
         tokenInput = new EditText(this);
         tokenInput.setSingleLine(true);
         tokenInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        tokenInput.setHint("Paste the shared API token");
+        tokenInput.setHint(R.string.hint_token_empty);
         page.addView(tokenInput, matchWrap());
 
         saveButton = new Button(this);
-        saveButton.setText("Save connection");
+        saveButton.setText(R.string.button_save_connection);
         saveButton.setOnClickListener(view -> saveConnection());
         page.addView(saveButton, matchWrap());
 
         locksButton = new Button(this);
-        locksButton.setText("Show door codes");
+        locksButton.setText(R.string.button_show_locks);
         locksButton.setOnClickListener(view -> requestData("/api/locks", true));
         LinearLayout.LayoutParams buttonParams = matchWrap();
         buttonParams.topMargin = dp(16);
         page.addView(locksButton, buttonParams);
 
         reservationsButton = new Button(this);
-        reservationsButton.setText("Show reservations");
+        reservationsButton.setText(R.string.button_show_reservations);
         reservationsButton.setOnClickListener(view -> requestData("/api/reservations", false));
         page.addView(reservationsButton, matchWrap());
 
@@ -134,19 +134,19 @@ public final class MainActivity extends Activity {
                 tokenStore.save(newToken);
                 currentToken = newToken;
                 tokenInput.setText("");
-                tokenInput.setHint("Token saved securely; enter a new token to replace it");
+                tokenInput.setHint(R.string.hint_token_saved);
             } else if (currentToken == null || currentToken.isEmpty()) {
                 currentToken = tokenStore.load();
             }
             if (currentToken == null || currentToken.isEmpty()) {
-                setStatus("Enter the shared API token, then save the connection.");
+                setStatus(getString(R.string.status_enter_token));
                 return;
             }
-            setStatus("Connection saved on this device.");
+            setStatus(getString(R.string.status_saved));
         } catch (IllegalArgumentException e) {
             setStatus(e.getMessage());
         } catch (GeneralSecurityException e) {
-            setStatus("Could not save the token securely. Please try again.");
+            setStatus(getString(R.string.status_save_failed));
         }
     }
 
@@ -161,13 +161,13 @@ public final class MainActivity extends Activity {
                 tokenStore.save(newToken);
                 currentToken = newToken;
                 tokenInput.setText("");
-                tokenInput.setHint("Token saved securely; enter a new token to replace it");
+                tokenInput.setHint(R.string.hint_token_saved);
             }
             if (currentToken == null || currentToken.isEmpty()) {
                 currentToken = tokenStore.load();
             }
             if (currentToken == null || currentToken.isEmpty()) {
-                setStatus("Enter the shared API token, then save the connection.");
+                setStatus(getString(R.string.status_enter_token));
                 return;
             }
             token = currentToken;
@@ -175,19 +175,19 @@ public final class MainActivity extends Activity {
             setStatus(e.getMessage());
             return;
         } catch (GeneralSecurityException e) {
-            setStatus("Could not read the saved token. Enter it again and save.");
+            setStatus(getString(R.string.status_read_failed));
             return;
         }
 
         setBusy(true);
         resultsLayout.removeAllViews();
-        setStatus("Loading...");
+        setStatus(getString(R.string.status_loading));
         executor.execute(() -> {
             try {
                 JSONObject response = getJson(baseUrl + endpoint, token);
                 runOnUiThread(() -> {
                     setBusy(false);
-                    setStatus(locks ? "Current door codes" : "Reservations checking out today or later");
+                    setStatus(getString(locks ? R.string.status_current_locks : R.string.status_reservations));
                     if (locks) {
                         showLocks(response.optJSONArray("locks"));
                     } else {
@@ -197,16 +197,20 @@ public final class MainActivity extends Activity {
             } catch (IOException | JSONException e) {
                 runOnUiThread(() -> {
                     setBusy(false);
-                    setStatus(e.getMessage() == null ? "Request failed. Check the server and try again." : e.getMessage());
+                    setStatus(e.getMessage() == null ? getString(R.string.status_request_failed) : e.getMessage());
                 });
             }
         });
     }
 
     private JSONObject getJson(String address, String token) throws IOException, JSONException {
-        HttpURLConnection connection = null;
+        HttpURLConnection connection;
         try {
             connection = (HttpURLConnection) URI.create(address).toURL().openConnection();
+        } catch (IllegalArgumentException e) {
+            throw new IOException("The server address is invalid.", e);
+        }
+        try {
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(15000);
             connection.setReadTimeout(30000);
@@ -217,19 +221,14 @@ public final class MainActivity extends Activity {
             int statusCode = connection.getResponseCode();
             if (statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 throw new IOException("Access denied. Check the saved API token.");
-            }
-            if (statusCode < 200 || statusCode >= 300) {
+            } else if (statusCode < 200 || statusCode >= 300) {
                 throw new IOException("The server returned HTTP " + statusCode + ".");
             }
             try (InputStream stream = connection.getInputStream()) {
                 return new JSONObject(new String(readAll(stream), StandardCharsets.UTF_8));
             }
-        } catch (IllegalArgumentException e) {
-            throw new IOException("The server address is invalid.", e);
         } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
+            connection.disconnect();
         }
     }
 
@@ -245,40 +244,38 @@ public final class MainActivity extends Activity {
 
     private void showLocks(JSONArray locks) {
         if (locks == null || locks.length() == 0) {
-            addResultLine("No door locks were returned.");
+            addResultLine(getString(R.string.no_locks_returned));
             return;
         }
         for (int i = 0; i < locks.length(); i++) {
             JSONObject lock = locks.optJSONObject(i);
-            if (lock == null) {
-                continue;
+            if (lock != null) {
+                addResultCard(
+                        "Room " + lock.optString("room_number", "?") + " · " + lock.optString("provider", "Lock"),
+                        "Door code: " + displayValue(lock.optString("door_code", ""))
+                );
             }
-            addResultCard(
-                    "Room " + lock.optString("room_number", "?") + " · " + lock.optString("provider", "Lock"),
-                    "Door code: " + displayValue(lock.optString("door_code", ""))
-            );
         }
     }
 
     private void showReservations(JSONArray reservations) {
         if (reservations == null || reservations.length() == 0) {
-            addResultLine("No reservations found for today or later.");
+            addResultLine(getString(R.string.no_reservations_found));
             return;
         }
         for (int i = 0; i < reservations.length(); i++) {
             JSONObject reservation = reservations.optJSONObject(i);
-            if (reservation == null) {
-                continue;
+            if (reservation != null) {
+                String details = "Check-in: " + displayValue(reservation.optString("check_in", ""))
+                        + "\nCheck-out: " + displayValue(reservation.optString("check_out", ""))
+                        + "\nStatus: " + displayValue(reservation.optString("lifecycle_status", ""))
+                        + "\nDoor code: " + displayValue(reservation.optString("door_code", ""));
+                addResultCard(
+                        "Room " + reservation.optString("room_number", "?")
+                                + " · " + reservation.optString("reservation_id", "Reservation"),
+                        details
+                );
             }
-            String details = "Check-in: " + displayValue(reservation.optString("check_in", ""))
-                    + "\nCheck-out: " + displayValue(reservation.optString("check_out", ""))
-                    + "\nStatus: " + displayValue(reservation.optString("lifecycle_status", ""))
-                    + "\nDoor code: " + displayValue(reservation.optString("door_code", ""));
-            addResultCard(
-                    "Room " + reservation.optString("room_number", "?")
-                            + " · " + reservation.optString("reservation_id", "Reservation"),
-                    details
-            );
         }
     }
 

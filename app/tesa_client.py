@@ -1,6 +1,6 @@
 import httpx
 
-from app.config import TESA_BASE_URL, TESA_USERNAME, TESA_PASSWORD, TESA_VERIFY_SSL
+from .config import TESA_BASE_URL, TESA_USERNAME, TESA_PASSWORD, TESA_VERIFY_SSL
 
 
 class TESAClient:

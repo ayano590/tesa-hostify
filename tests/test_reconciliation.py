@@ -8,10 +8,10 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 
-import sync
-from database import Database
-from reservation_service import ReservationService
-from ttlock_client import TTLockClient
+from app import sync
+from app.database import Database
+from app.reservation_service import ReservationService
+from app.ttlock_client import TTLockClient
 
 
 class FakeTESAClient:

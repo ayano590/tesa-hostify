@@ -3,7 +3,7 @@ import logging
 
 import httpx
 
-from app.config import DISCORD_WEBHOOK_URL, HEALTHCHECKS_URL
+from .config import DISCORD_WEBHOOK_URL, HEALTHCHECKS_URL
 
 logger = logging.getLogger("monitor")
 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hostify Access</string>
+    <string name="title_home">Hostify Access</string>
+    <string name="subtitle_home">View current door codes and upcoming reservations.</string>
+    <string name="label_server_address">Server address (HTTPS)</string>
+    <string name="hint_server_address">https://your-server.example.com</string>
+    <string name="label_api_token">Shared API token</string>
+    <string name="hint_token_empty">Paste the shared API token</string>
+    <string name="hint_token_saved">Token saved securely; enter a new token to replace it</string>
+    <string name="button_save_connection">Save connection</string>
+    <string name="button_show_locks">Show door codes</string>
+    <string name="button_show_reservations">Show reservations</string>
+    <string name="status_token_unlocked_failed">Saved token could not be unlocked. Enter it again and save.</string>
+    <string name="status_saved">Connection saved on this device.</string>
+    <string name="status_enter_token">Enter the shared API token, then save the connection.</string>
+    <string name="status_save_failed">Could not save the token securely. Please try again.</string>
+    <string name="status_read_failed">Could not read the saved token. Enter it again and save.</string>
+    <string name="status_loading">Loading…</string>
+    <string name="status_current_locks">Current door codes</string>
+    <string name="status_reservations">Reservations checking out today or later</string>
+    <string name="status_request_failed">Request failed. Check the server and try again.</string>
+    <string name="no_locks_returned">No door locks were returned.</string>
+    <string name="no_reservations_found">No reservations found for today or later.</string>
+</resources>
