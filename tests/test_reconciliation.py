@@ -1,12 +1,13 @@
-import os
 import sys
 import tempfile
 import unittest
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from app import sync
 from app.database import Database
@@ -69,7 +70,7 @@ class ReconciliationIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
-        self.db_path_patch = patch("database.DB_PATH", Path(self.temp_dir.name) / "hotel.db")
+        self.db_path_patch = patch("app.database.DB_PATH", Path(self.temp_dir.name) / "hotel.db")
         self.db_path_patch.start()
         self.addCleanup(self.db_path_patch.stop)
         self.db = Database()
@@ -401,8 +402,8 @@ class TTLockClientReadbackTests(unittest.TestCase):
         ]
 
         with (
-            patch("ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
-            patch("ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
         ):
             self.assertEqual(client.get_door_code("fake-token", "2"), "4826")
 
@@ -424,8 +425,8 @@ class TTLockClientReadbackTests(unittest.TestCase):
         )
 
         with (
-            patch("ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
-            patch("ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
             self.assertRaisesRegex(ValueError, "missing keyboardPwd"),
         ):
             client.get_door_code("fake-token", "2")
@@ -439,8 +440,8 @@ class TTLockClientReadbackTests(unittest.TestCase):
         )
 
         with (
-            patch("ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
-            patch("ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
             self.assertRaisesRegex(ValueError, "missing a valid list"),
         ):
             client.get_door_code("fake-token", "2")
@@ -502,8 +503,8 @@ class TTLockClientReadbackTests(unittest.TestCase):
         )
 
         with (
-            patch("ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
-            patch("ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_LOCK_ID", "lock-2"),
+            patch("app.ttlock_client.TTLOCK_ROOM2_PWD_ID", "pwd-2"),
         ):
             self.assertIsNone(client.get_door_code("fake-token", "2"))
 

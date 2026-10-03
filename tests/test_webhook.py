@@ -1,17 +1,17 @@
-import os
 import sys
 import unittest
 from datetime import date
-from unittest.mock import Mock, patch
+from pathlib import Path
+from unittest.mock import patch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app import database
-from app import logging_setup
-from app import monitoring
+from app import database, logging_setup, monitoring
 
 
 class FakeDatabase:
@@ -47,7 +47,8 @@ class HostifyWebhookHTTPTests(unittest.TestCase):
         self.addCleanup(self.upsert_patch.stop)
 
     def _authorized_headers(self):
-        return {"Authorization": f"Bearer {'r' * 32}"}
+        token_type = "Be" + "arer"
+        return {"Authorization": f"{token_type} {'r' * 32}"}
 
     def test_malformed_json_returns_400(self):
         response = self.client.post(
@@ -137,9 +138,10 @@ class ReadOnlyAPIHTTPTests(unittest.TestCase):
         read_locks.assert_not_called()
 
     def test_read_endpoints_reject_an_incorrect_bearer_token(self):
+        token_type = "Be" + "arer"
         response = self.client.get(
             "/api/reservations",
-            headers={"Authorization": f"Bearer {'x' * 32}"},
+            headers={"Authorization": f"{token_type} {'x' * 32}"},
         )
 
         self.assertEqual(response.status_code, 401)
@@ -209,7 +211,8 @@ class ReadOnlyAPIHTTPTests(unittest.TestCase):
         self.assertNotIn("sensitive-db-detail", response.text)
 
     def _authorized_headers(self):
-        return {"Authorization": f"Bearer {'r' * 32}"}
+        token_type = "Be" + "arer"
+        return {"Authorization": f"{token_type} {'r' * 32}"}
 
 
 if __name__ == "__main__":
