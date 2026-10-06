@@ -14,7 +14,7 @@ For unattended operation on a Windows PC, use Task Scheduler to launch Uvicorn a
 5. On **Settings**, enable **Restart the task if it fails** and choose a short restart delay. Disable **Stop the task if it runs longer than** so Windows does not terminate this long-running process.
 6. Save the task and provide the selected account's password if Windows asks for it. Start the task once manually and check **Last Run Result** in Task Scheduler.
 
-The `Start in` directory matters: the service uses package imports such as `app.config`, so it must be the repository root. The relative paths for `hotel.db` and `app.log` therefore place both files at the root. The account running the task must have access to the project directory, `.env`, and network.
+The `Start in` directory matters: the service uses package imports such as `app.config`, so it must be the repository root. The `.env` file should also be in the repository root, next to `README.md`. The relative paths for `hotel.db` and `app.log` place both files there as well. The account running the task must have access to the project directory, `.env`, and network.
 
 Set up the Python environment and install `requirements.txt` before creating the task. Keep the `.env` file out of version control and ensure it is readable by the account running the task. If the machine sleeps or shuts down, the service will not run until Windows starts again.
 

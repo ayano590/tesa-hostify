@@ -62,7 +62,7 @@ python -m venv venv
 .\venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Create an `app/.env` file with the provider credentials and settings below. Do not commit real credentials. The configuration module loads `.env` with `python-dotenv`.
+Create a `.env` file in the project root (next to `README.md`) with the provider credentials and settings below. Do not commit real credentials. The configuration module loads `.env` with `python-dotenv`.
 
 | Variable | Purpose |
 |---|---|

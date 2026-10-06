@@ -11,7 +11,7 @@ python -m venv venv
 .\venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Configure credentials in `app/.env` (see [configuration and setup](./docs/project-guide.md#setup-and-configuration)), then run from the repository root:
+Create `.env` in the project root and configure credentials there (see [configuration and setup](./docs/project-guide.md#setup-and-configuration)), then run from the repository root:
 
 ```powershell
 .\venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000
