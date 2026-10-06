@@ -265,6 +265,18 @@ async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
         _notify_malformed_webhook(request, category, reason, action)
         return {"status": "error", "reason": reason}
 
+    nickname = payload["data"]["listing"]["nickname"]
+    digit_count = sum(char.isdigit() for char in nickname)
+    if digit_count != 1:
+        reason = (
+            "Listing nickname must contain exactly one digit; "
+            f"received {digit_count}."
+        )
+        _notify_malformed_webhook(
+            request, "invalid room nickname", reason, payload["action"]
+        )
+        return {"status": "error", "reason": reason}
+
     try:
         background_tasks.add_task(service.upsert_reservation, payload)
         return {"status": "success", "message": "Reservation data is being processed."}
