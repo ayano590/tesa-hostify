@@ -1,0 +1,8 @@
+app/__pycache__
+app/app.log
+app/hotel.db
+venv/
+.env
+android-app/.gradle/
+android-app/local.properties
+android-app/**/build/

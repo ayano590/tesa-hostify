@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Go West</string>
+    <string name="title_home">Go West</string>
+    <string name="subtitle_home">View current door codes and active reservations.</string>
+    <string name="label_server_address">Server address (HTTPS)</string>
+    <string name="hint_server_address">https://your-server.example.com</string>
+    <string name="label_api_token">Shared API token</string>
+    <string name="hint_token_empty">Paste the shared API token</string>
+    <string name="hint_token_saved">Token saved securely; enter a new token to replace it</string>
+    <string name="button_save_connection">Save connection</string>
+    <string name="button_show_ttlock_codes">Show TTLock codes</string>
+    <string name="button_show_tesa_pins">Show TESA codes</string>
+    <string name="button_show_reservations">Show active reservations</string>
+    <string name="button_send_reservation_report">Send reservation dates to Discord</string>
+    <string name="status_reservation_report_sent">Reservation dates sent to Discord.</string>
+    <string name="status_token_unlocked_failed">Saved token could not be unlocked. Enter it again and save.</string>
+    <string name="status_saved">Connection saved on this device.</string>
+    <string name="status_enter_token">Enter the shared API token, then save the connection.</string>
+    <string name="status_save_failed">Could not save the token securely. Please try again.</string>
+    <string name="status_read_failed">Could not read the saved token. Enter it again and save.</string>
+    <string name="status_loading">Loading…</string>
+    <string name="status_current_locks">Current door codes</string>
+    <string name="status_reservations">Active reservations</string>
+    <string name="status_request_failed">Request failed. Check the server and try again.</string>
+    <string name="no_locks_returned">No door locks were returned.</string>
+    <string name="lock_provider_read_failed">Could not read door codes from %1$s%2$s%3$s.</string>
+    <string name="no_reservations_found">No active reservations found.</string>
+    <string name="title_credentials">Connection Settings</string>
+    <string name="subtitle_credentials">Configure your server address and shared API token.</string>
+    <string name="title_discord_report">Discord Report</string>
+    <string name="subtitle_discord_report">Send upcoming reservation dates report to Discord.</string>
+    <string name="button_back_home">← Back to Home</string>
+    <string name="button_settings">⚙</string>
+</resources>
