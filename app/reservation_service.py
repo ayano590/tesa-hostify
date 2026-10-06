@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.sync import sync_to_tesa, sync_to_ttlock
 import logging
 from app.monitoring import DiscordNotifier
@@ -15,13 +15,22 @@ class ReservationService:
 
     def upsert_reservation(self, payload):
         reservation_id = payload["reservation_id"]
-        room_number = payload["data"]["listing"]["nickname"]
+        room_number = next(
+            char
+            for char in payload["data"]["listing"]["nickname"]
+            if char.isdigit()
+        )
 
         checkInStr = payload["data"]["reservation"]["checkIn"]
         planned_arrival = payload["data"]["reservation"]["planned_arrival"]
         if planned_arrival in ["None", None, ""]:
-            planned_arrival = f"{CHECKIN_HOUR}:00:00"
-        checkIn = datetime.fromisoformat(f"{checkInStr}T{planned_arrival}")
+            checkIn = datetime.fromisoformat(
+                f"{checkInStr}T{CHECKIN_HOUR}:00:00"
+            )
+        else:
+            checkIn = datetime.fromisoformat(
+                f"{checkInStr}T{planned_arrival}"
+            ) - timedelta(hours=1)
         checkIn = min(
             checkIn,
             datetime.fromisoformat(f"{checkInStr}T{CHECKIN_HOUR}:00:00"),
