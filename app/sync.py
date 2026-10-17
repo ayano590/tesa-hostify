@@ -37,7 +37,7 @@ def _execute_tesa_sync(tesa, new_pins):
         current_pins.update(new_pins)
         tesa.update_common_pins(current_pins)
         logger.info("TESA update submitted.")
-        time.sleep(60)
+        time.sleep(15)
 
     actual_pins = tesa.get_common_pins()["commonPinsInfo"]
     failed_pins = [
@@ -137,7 +137,7 @@ def sync_to_ttlock(active_reservations):
                     logger.info(f"Room {room_number} already has the requested TTLock code.")
                 else:
                     _retry_ttlock_update(ttlock, access_token, room_number, door_code)
-                    time.sleep(60)
+                    time.sleep(15)
                     actual_code = ttlock.get_door_code(access_token, room_number)
                     if str(actual_code or "") != str(door_code or ""):
                         raise ValueError("TTLock code read-back did not match the requested code")
