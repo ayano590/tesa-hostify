@@ -2,6 +2,20 @@
 
 For unattended operation on a Windows PC, use Task Scheduler to launch Uvicorn at startup. This lets the service run without an open terminal and can restart it if the process exits.
 
+## System time synchronization
+
+Before starting the service, ensure that Windows maintains an accurate system clock. TTLock credential-list requests can fail when the host's system time is out of sync.
+
+1. Open **Settings → Time & language → Date & time**.
+2. Enable **Set time automatically**.
+3. Verify that the configured time zone is correct.
+4. Click **Sync now** to synchronize the clock.
+5. Confirm that the displayed date and time are correct before starting the service.
+
+Keep automatic time synchronization enabled while the service is running. If TTLock fails to retrieve the credential list, verify the host's clock and time synchronization first.
+
+For additional information, see Microsoft's [Windows Time Service documentation](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-top).
+
 ## Create the task
 
 1. Open **Task Scheduler** and choose **Create Task**.

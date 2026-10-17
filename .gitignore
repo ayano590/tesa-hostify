@@ -1,5 +1,5 @@
 app/__pycache__
-app.log
+app.log*
 hotel.db*
 venv/
 .env

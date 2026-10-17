@@ -31,6 +31,14 @@ The scheduler checks reservations every five minutes. It marks them `accepted` b
 
 Once a day, the scheduler removes reservations whose check-out was more than 30 days ago and checkpoints the SQLite write-ahead log.
 
+### System time prerequisite
+
+**Keep the host computer's system clock synchronized with the correct time.** TTLock credential-list requests can fail if the system clock is incorrect or out of sync, causing the application to report provider errors when retrieving door codes.
+
+On Windows, enable automatic time synchronization and verify that the system date, time, and time zone are correct. See [Running the service on Windows](./windows-running.md#system-time-synchronization) for setup instructions.
+
+If TTLock credential retrieval fails, check system time synchronization before investigating provider credentials or API configuration.
+
 ### Provider synchronization
 
 - **TESA:** Rooms map to shared pins as follows: room 1 → `pin2`, room 2 → `pin6`, room 3 → `pin3`, room 4 → `pin4`, room 5 → `pin5`, room 6 → `pin7`. Before updating, the service reads the current pin set and skips the write if the requested values already match. After a write, it waits 60 seconds and reads back the pins for verification.
