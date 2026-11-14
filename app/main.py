@@ -242,6 +242,12 @@ async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
         _notify_malformed_webhook(request, "malformed payload", reason, "<unavailable>")
         return {"status": "error", "reason": reason}
 
+    data = payload.get("data")
+    reservation = data.get("reservation") if isinstance(data, dict) else None
+    if isinstance(reservation, dict) and reservation.get("status") == "offer":
+        logger.info("Ignoring Hostify offer reservation.")
+        return {"status": "ignored", "message": "Offer reservations are not processed."}
+
     if "action" not in payload:
         reason = "Missing required action."
         _notify_malformed_webhook(request, "malformed payload", reason, "<missing>")
