@@ -232,6 +232,7 @@ async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         payload = await request.json()
         logger.info(f"Webhook received.")
+        print(payload)
     except (JSONDecodeError, UnicodeDecodeError) as e:
         reason = f"Invalid JSON: {e}"
         _notify_malformed_webhook(request, "malformed payload", reason, "<unavailable>")
@@ -244,7 +245,7 @@ async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
 
     data = payload.get("data")
     reservation = data.get("reservation") if isinstance(data, dict) else None
-    if isinstance(reservation, dict) and reservation.get("status") == "offer":
+    if isinstance(reservation, dict) and reservation.get("status") in ["offer", "inquiry"]:
         logger.info("Ignoring Hostify offer reservation.")
         return {"status": "ignored", "message": "Offer reservations are not processed."}
 
