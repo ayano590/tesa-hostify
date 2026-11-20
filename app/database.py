@@ -109,7 +109,7 @@ class Database:
                     DELETE FROM reservations
                     WHERE check_out < datetime('now', '-30 days')
                        OR status IN ('offer', 'inquiry')
-                       OR door_code = '4677'
+                       OR (door_code = '4677' AND status = 'active')
                 """)
 
         except sqlite3.Error as e:
