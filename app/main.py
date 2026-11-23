@@ -232,7 +232,6 @@ async def hostify_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         payload = await request.json()
         logger.info(f"Webhook received.")
-        print(payload)
     except (JSONDecodeError, UnicodeDecodeError) as e:
         reason = f"Invalid JSON: {e}"
         _notify_malformed_webhook(request, "malformed payload", reason, "<unavailable>")
